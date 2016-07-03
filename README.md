@@ -1,7 +1,8 @@
 # Flora-Cli
 
 ## Install
-To install Flora-cli make sure you have python3
+To install Flora-cli make sure you have python3 and the following dependencies are met
+- psutil
 Execute this command:
 
 ``sudo curl -o /usr/local/bin/flora-cli https://raw.githubusercontent.com/NekoKitty/Flora-Cli/master/Flora-Cli/main.py && sudo chmod +x /usr/local/bin/flora-cli``
