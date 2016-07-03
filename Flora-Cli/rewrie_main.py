@@ -14,6 +14,145 @@ import zipfile
 from urllib.request import urlretrieve
 from shutil import rmtree
 
+
+class FloraCli:
+    def __init__(self):
+        self.home = os.path.expanduser('~')
+        self.options = {'debug': False, 'First Start': False, 'edit config': False}
+        self.list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update']
+        self.list_of_commands += ['Exit']
+        self.running_processes = []
+        self.info = psutil.Process()
+        self.val = {}
+        self.path_to_config = '{0}/Flora_Command-Line/'.format(self.home)
+        self.get_values()
+        self.command_dictionary = {'Edit Config': self.edit_config, 'Test Python': test_python,
+                                   'Update PIP Dependencies': pip_updater,
+                                   'speedtest': speed_test, 'start bot': self.bot_starter,
+                                   'kill pid': self.process_killer, 'bash': run_bash_commands, 'update': program_update}
+
+
+    def yes_or_no(self, question: str=None) -> bool:
+        while True:
+            try:
+                if question:
+                    prompt = question + 'Yes or No\n>>> '
+                else:
+                    prompt = 'Yes or No\n>>> '
+                x = input(prompt).lower()
+                if x in ['yes', 'ye', 'y', 'no', 'n']:
+                    if x.startswith('y'):
+                        return True
+                    if x.startswith('n'):
+                        return False
+            except Exception:
+                pass
+
+    def get_values(self, fresh=False):
+        if not os.path.exists(self.path_to_config):
+            os.mkdir(self.path_to_config)
+            f = open('{0}/values.txt'.format(self.path_to_config), 'w')
+            f.close()
+            fresh = True
+        if fresh:
+            self.val['name'] = str(input('What Should I call you?\nName: ')).strip()
+            text = '{0}\n'.format(self.val['name'])
+            prompt = 'Do You Have any libraries that cannot be updated through pip -U {name} [like a git repo]\nYes/No: '
+            if yes_or_no(prompt):
+                pip_list = [True]
+                adding_entries = True
+                print('Please Press Enter After each command.\nType "Done" when done.')
+                while adding_entries:
+                    entry = str(input('Command: ')).strip()
+                    if entry.lower() != 'done':
+                        pip_list += [entry]
+                    else:
+                        adding_entries = False
+                if len(pip_list) == 1:
+                    pip_list = [False]
+            else:
+                pip_list = [False]
+            self.val['pip list'] = pip_list
+            text += '{0}\n'.format(val['pip list'])
+            f = open('{0}/values.txt'.format(self.path_to_config), 'w')
+            f.write(text)
+            f.close()
+        else:
+            with open('{0}/values.txt'.format(self.path_to_config), 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if line.startswith('[') and line.endswith(']'):
+                        line.strip('[').strip(']')
+                        line.split('\', \'')
+                        for entry in line:
+                            line[line.index(entry)] = entry.strip('\'').strip()
+                        self.val['pip list'] = line
+                    elif lines.index(line) == 0:
+                        self.val['name'] = line.strip()
+
+    def loopback(self):
+        self.command_handler()
+
+    def command_handler(self, command):
+        if command:
+            if command != 'Exit':
+                try:
+                    command_dictionary[command]()
+                except:
+                    print('Command Failed')
+                input('press Enter to continue')
+                if len(running_pid['list']) > 0:
+                    print('running PID:', running_pid['list'])
+                self.loopback()
+            else:
+                exiter()
+        else:
+            self.loopback()
+
+    def edit_config(self):
+        pass
+
+    def bot_starter(self):
+        path_to_bot = self.path_to_config
+        try:
+            with open('{0}bot.txt'.format(path_to_bot), 'r') as f:
+                x = f.readlines()
+                name, bot_command = x
+                f.close()
+                if not yes_or_no('Would you like to start ' + name + ' with the command:\n ' + bot_command):
+                    if not yes_or_no('Would you like to start the bot at all?'):
+                        return
+                    while True:
+                        name = input('Bots Name\n>>> ')
+                        bot_command = input('Bot Start Command\n>>> ')
+                        if yes_or_no('Would you like to start {} with the command:\n{1}'.format(name, bot_command)):
+                            f = open('{0}/bot.txt'.format(path_to_bot), 'w')
+                            text = '{0}\n{1}'.format(name, bot_command)
+                            f.write(text)
+                            f.close()
+                            break
+
+                print('Starting Bot...')
+                try:
+                    process = psutil.Popen(bot_command.split(), stdout=PIPE)
+                    self.running_processes.append(process)
+                except Exception as e:
+                    print('Command Failed')
+        except Exception:
+            print('Command Failed')
+
+    def on_terminate(self, proc):
+        print("process {} terminated with exit code {}".format(proc, proc.returncode))
+
+    def process_killer(self):
+        for p in self.running_processes:
+            try:
+                p.kill()
+                on_terminate(p)
+            except:
+                print('failed to kill {0}'.format(p))
+
+
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update']
@@ -22,7 +161,7 @@ running_pid = {'list': []}
 val = {}
 
 
-def yes_or_no(question = None):
+def yes_or_no(question=None):
     while True:
         try:
             if question:
@@ -251,14 +390,11 @@ def run_bash_commands():
 
 
 def test_python():
-    print('enter \n for multi-lined code')
     while True:
         try:
-            x = str(input('>>> ')).strip().replace('\\n','\n')
-            while x.endswith('\n'):
-                x += str(input('>>> ')).strip().replace('\\n', '\n')
+            x = str(input('>>> ')).strip().strip('`').strip()
             if not x.startswith('exit'):
-                exec(x)
+                eval(x)
             else:
                 break
         except Exception as e:
@@ -269,6 +405,23 @@ def exiter():
     print('Exiting...')
     process_killer()
     exit('Exited')
+
+def program_update():
+    if os.name != 'posix':
+        print('Only working on linux systems')
+        return
+    x = [os.getcwd(), 0]
+    while os.path.exists('temp{0}'.format(x[1])):
+        x[1] += 1
+    if os.popen('whereis unzip').read[5:] == ':':
+        print('requires unzip command')
+        return
+    temp_path = 'temp{}'.format(x[1])
+    command = 'mkdir {0} && cd {0} && wget https://github.com/NekoKitty/Flora-Cli/archive/master.zip && unzip master.zip -d temp && cd zip && sudo sh setup.sh && cd ../../ && rm -rf {0} && cd {1}'.format(temp_path, x[0])
+    print('updating...')
+    x = os.popen(command)
+    len(x.readlines())
+    print('Done')
 
 
 def reporthook(blocknum, blocksize, totalsize):
@@ -313,7 +466,6 @@ def unzip(source_filename: str, path: str, remove_zip: bool=True):
         os.remove(source_filename)
 
 
-
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -353,3 +505,5 @@ if __name__ == '__main__':
             print('Something went wrong\nError:', error)
     except:
         exiter()
+
+
