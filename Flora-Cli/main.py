@@ -251,11 +251,14 @@ def run_bash_commands():
 
 
 def test_python():
+    print('enter \n for multi-lined code')
     while True:
         try:
-            x = str(input('>>> ')).strip().strip('`').strip()
+            x = str(input('>>> ')).strip().replace('\\n','\n')
+            while x.endswith('\n'):
+                x += str(input('>>> ')).strip().replace('\\n', '\n')
             if not x.startswith('exit'):
-                eval(x)
+                exec(x)
             else:
                 break
         except Exception as e:
