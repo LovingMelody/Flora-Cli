@@ -1,4 +1,4 @@
-#!//usr/local/bin/python3.6
+#!/usr/bin/python3
 import sys
 import os
 import time
@@ -22,7 +22,7 @@ running_pid = {'list': []}
 val = {}
 
 
-def yes_or_no(question = None):
+def yes_or_no(question=None):
     while True:
         try:
             if question:
@@ -225,7 +225,7 @@ def pip_updater():
     print('Please Note, this has to be run as root or in a venv')
     if not yes_or_no('would you like to continue?'):
         return
-    if os.getuid() != 0 or os.name != 'nt':
+    if os.name != 'nt':
         if not yes_or_no('Do you need sudo?'):
             pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 pip install -U'
         else:
@@ -311,7 +311,6 @@ def unzip(source_filename: str, path: str, remove_zip: bool=True):
         zf.extractall(path=path)
     if remove_zip:
         os.remove(source_filename)
-
 
 
 def main():
