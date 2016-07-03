@@ -8,25 +8,29 @@ from subprocess import PIPE
 import subprocess
 import pip
 import getpass
-
+import traceback
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
-list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid']
+list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash']
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
 
 
-def yes_or_no():
+def yes_or_no(question = None):
     while True:
         try:
-            x = input('Yes or No\n>>> ').lower()
+            if question:
+                prompt = question + 'Yes or No\n>>> '
+            else:
+                prompt = 'Yes or No\n>>> '
+            x = input(prompt).lower()
             if x in ['yes', 'ye', 'y', 'no', 'n']:
                 if x.startswith('y'):
                     return True
                 if x.startswith('n'):
                     return False
-        except:
+        except Exception:
             pass
 
 
@@ -41,7 +45,7 @@ def get_values(fresh=False):
         val['name'] = str(input('What Should I call you?\nName: ')).strip()
         text = '{0}\n'.format(val['name'])
         prompt = 'Do You Have any libraries that cannot be updated through pip -U {name} [like a git repo]\nYes/No: '
-        if str(input(prompt)).lower().startswith('y'):
+        if yes_or_no(prompt):
             pip_list = [True]
             adding_entries = True
             print('Please Press Enter After each command.\nType "Done" when done.')
@@ -107,14 +111,12 @@ def bot_starter():
             f.close()
             print('Would you like to start', name, 'with the command:\n', bot_command)
             if not yes_or_no():
-                print('Would you like to start the bot at all?')
-                if not yes_or_no():
+                if not yes_or_no('Would you like to start the bot at all?'):
                     return
                 while True:
                     name = input('Bots Name\n>>> ')
                     bot_command = input('Bot Start Command\n>>> ')
-                    print('Would you like to start', name, 'with the command:\n', bot_command)
-                    if yes_or_no():
+                    if yes_or_no('Would you like to start {} with the command:\n{1}'.format(name, bot_command)):
                         f = open('{0}/bot.txt'.format(path_to_bot), 'w')
                         text = '{0}\n{1}'.format(name, bot_command)
                         f.write(text)
@@ -122,7 +124,11 @@ def bot_starter():
                         break
 
             print('Starting Bot...')
-            process = psutil.Popen(bot_command.split(), stdout=PIPE)
+            try:
+                process = psutil.Popen(bot_command.split(), stdout=PIPE)
+            except Exception as e:
+                traceback.format_exception()
+
     except:
         try:
             print(os.listdir(path_to_bot))
@@ -167,8 +173,7 @@ def speed_test():
     except Exception as e:
         print(e)
         print('required dependency not installed')
-        print('Would you like for me to install speedtest-cli?')
-        if input('Y/N: ').lower().startswith('y'):
+        if yes_or_no('Would you like for me to install speedtest-cli?'):
             if os.name != 'nt':
                 a = os.popen('sudo pip install speedtest-cli -U')
             else:
@@ -188,8 +193,7 @@ def speed_test():
             a = 'Missing Dependency speedtest-cli'
     finally:
         if share:
-            print('Would you like for me to open this in a browser?')
-            if input('Y/N: ').lower().startswith('y'):
+            if yes_or_no('Would you like for me to open this in a browser?'):
                 if os.name == 'nt':
                     os.popen('start {0}'.format(share))
                 elif os.name == 'posix':
@@ -214,19 +218,16 @@ def speed_test_formatter(a):
 
 def pip_updater():
     print('Please Note, this has to be run as root or in a venv')
-    print('would you like to continue?')
-    if not yes_or_no():
+    if not yes_or_no('would you like to continue?'):
         return
     if os.getuid() != 0 or os.name != 'nt':
-        print('Do you need sudo?')
-        if not yes_or_no():
+        if not yes_or_no('Do you need sudo?'):
             pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 pip install -U'
         else:
             pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 sudo pip install -U '
     else:
         pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 pip install -U '
-    print('Do you want to install pre releases?')
-    if yes_or_no():
+    if yes_or_no('Do you want to install pre releases?'):
         pip_update_command += ' --pre '
     x = os.popen(pip_update_command)
     print('Updating pip please wait...')
@@ -268,12 +269,17 @@ def main():
         msg = '{0}. {1}'.format(list_of_commands.index(command), command)
         print(msg)
     try:
-        command = (list_of_commands[int(input('Option#: '))])
+        x = input('Option:')
+        if not x.isdigit():
+            command = list_of_commands.index(x)
+        else:
+            command = list_of_commands[int(x)]
     except:
         command = None
     command_handler(command)
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
-                      'speedtest': speed_test, 'start bot': bot_starter, 'kill pid': process_killer}
+                      'speedtest': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
+                      'bash': run_bash_commands}
 if __name__ == '__main__':
     try:
         # print(sys.argv)
