@@ -16,7 +16,7 @@ from shutil import rmtree
 
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
-list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update']
+list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update', 'task manager']
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
@@ -174,7 +174,7 @@ def speed_test():
     print('Running Speedtest')
     a = os.popen('speedtest-cli --share').readlines()
     try:
-       a, share = speed_test_formatter(a)
+        a, share = speed_test_formatter(a)
     except Exception as e:
         print(e)
         print('required dependency not installed')
@@ -280,7 +280,7 @@ def reporthook(blocknum, blocksize, totalsize):
         sys.stderr.write(s)
         if readsofar >= totalsize: # near the end
             sys.stderr.write("\n")
-    else: # total size is unknown
+    else:  # total size is unknown
         sys.stderr.write("read %d\n" % (readsofar,))
 
 
@@ -313,6 +313,55 @@ def unzip(source_filename: str, path: str, remove_zip: bool=True):
         os.remove(source_filename)
 
 
+def task_manager(loop=False):
+    processes = psutil.pids()
+    display = '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format('PID', 'Name', 'CPU%', 'MEMORY%', 'Current Working Directory')
+    for p in processes:
+        try:
+            p = psutil.Process(p)
+            display += '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format(p.pid, p.name(), str(p.cpu_percent()) + '%', str(p.memory_percent()) + '%', p.cwd())
+        except:
+            pass
+    print(display)
+    if loop or yes_or_no('Would You like me to terminate a process?\n'):
+        print('Enter Done, when you are done')
+        p = input('PID:\n>>> ')
+        print(p)
+        if p.lower() == 'done':
+            return
+        if p.lower() == 'list':
+            processes = psutil.pids()
+            display = '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format('PID', 'Name', 'CPU%',
+                                                                                 'MEMORY%',
+                                                                                 'Current Working Directory')
+            for p in processes:
+                try:
+                    p = psutil.Process(p)
+                    display += '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format(p.pid, p.name(), str(
+                        p.cpu_percent()) + '%', str(p.memory_percent()) + '%', p.cwd())
+                except Exception:
+                    pass
+            p = 'list'
+        if p.lower() != 'list':
+            try:
+                p = psutil.Process(int(p))
+                if os.name != 'nt':
+                    os.popen('kill {0}'.format(p.pid))
+                p.kill()
+                p.terminate()
+                psutil.pids()
+                p = int(psutil.pid)
+                if p in psutil.pids():
+                    print('Failed')
+                else:
+                    print('Exited')
+            except:
+                print('Sorry, I cannot terminate that process')
+                time.sleep(2)
+        task_manager(True)
+
+
+
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -329,7 +378,7 @@ def main():
     command_handler(command)
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
                       'speedtest': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
-                      'bash': run_bash_commands, 'update': program_update}
+                      'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager}
 if __name__ == '__main__':
     try:
         # print(sys.argv)
