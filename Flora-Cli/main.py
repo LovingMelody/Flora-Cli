@@ -267,6 +267,23 @@ def exiter():
     process_killer()
     exit('Exited')
 
+def program_update():
+    if os.name != 'posix':
+        print('Only working on linux systems')
+        return
+    x = [os.getcwd(), 0]
+    while os.path.exists('temp{0}'.format(x[1])):
+        x[1] += 1
+    if os.popen('whereis unzip').read[5:] == ':':
+        print('requires unzip command')
+        return
+    temp_path = 'temp{}'.format(x[1])
+    command = 'mkdir {0} && cd {0} && wget https://github.com/NekoKitty/Flora-Cli/archive/master.zip && unzip master.zip -d temp && cd zip && sudo sh setup.sh && cd ../../ && rm -rf {0} && cd {1}'.format(temp_path, x[0])
+    print('updating...')
+    x = os.popen(command)
+    len(x.readlines())
+    print('Done')
+
 
 def reporthook(blocknum, blocksize, totalsize):
     readsofar = blocknum * blocksize
@@ -289,14 +306,11 @@ def program_update():
         x = [os.getcwd(), 0]
         while os.path.exists('temp{0}'.format(x[1])):
             x[1] += 1
-        if os.popen('whereis unzip').read()[5:] == ':':
-            print('requires unzip command')
-            return
         temp_path = 'temp{}'.format(x[1])
         urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', reporthook)
         unzip('master.zip', temp_path)
         print('installing')
-        len(os.popen('sudo sh {0}/Flora-Cli-master/setup.sh').readlines())
+        len(os.popen('cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)).readlines())
         rmtree(temp_path)
         print('Done')
     except Exception as e:
