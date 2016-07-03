@@ -9,9 +9,14 @@ import subprocess
 import pip
 import getpass
 import traceback
+import sys
+import zipfile
+from urllib.request import urlretrieve
+from shutil import rmtree
+
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
-list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash']
+list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update']
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
@@ -263,6 +268,51 @@ def exiter():
     exit('Exited')
 
 
+def reporthook(blocknum, blocksize, totalsize):
+    readsofar = blocknum * blocksize
+    if totalsize > 0:
+        percent = readsofar * 1e2 / totalsize
+        s = "\r%5.1f%% %*d / %d" % (
+            percent, len(str(totalsize)), readsofar, totalsize)
+        sys.stderr.write(s)
+        if readsofar >= totalsize: # near the end
+            sys.stderr.write("\n")
+    else: # total size is unknown
+        sys.stderr.write("read %d\n" % (readsofar,))
+
+
+def program_update():
+    try:
+        if os.name != 'posix':
+            print('Only working on linux systems')
+            return
+        x = [os.getcwd(), 0]
+        while os.path.exists('temp{0}'.format(x[1])):
+            x[1] += 1
+        if os.popen('whereis unzip').read()[5:] == ':':
+            print('requires unzip command')
+            return
+        temp_path = 'temp{}'.format(x[1])
+        urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', reporthook)
+        unzip('master.zip', temp_path)
+        print('installing')
+        len(os.popen('sudo sh {0}/Flora-Cli-master/setup.sh').readlines())
+        rmtree(temp_path)
+        print('Done')
+    except Exception as e:
+        print(e)
+
+
+def unzip(source_filename: str, path: str, remove_zip: bool=True):
+    with zipfile.ZipFile(source_filename) as zf:
+        if not os.path.exists(path):
+            os.mkdir(path)
+        zf.extractall(path=path)
+    if remove_zip:
+        os.remove(source_filename)
+
+
+
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -279,7 +329,7 @@ def main():
     command_handler(command)
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
                       'speedtest': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
-                      'bash': run_bash_commands}
+                      'bash': run_bash_commands, 'update': program_update}
 if __name__ == '__main__':
     try:
         # print(sys.argv)

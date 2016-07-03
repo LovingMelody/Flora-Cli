@@ -5,4 +5,3 @@ echo "Setting Up Flora-Cli"
 cp Flora-Cli/main.py /usr/local/bin/flora-cli
 chmod +x /usr/local/bin/flora-cli
 echo "Done"
-flora-cli
