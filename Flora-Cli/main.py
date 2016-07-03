@@ -310,7 +310,8 @@ def program_update():
         urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', reporthook)
         unzip('master.zip', temp_path)
         print('installing')
-        len(os.popen('cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)).readlines())
+        command = 'cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)
+        len(os.popen(command).readlines())
         rmtree(temp_path)
         print('Done')
     except Exception as e:
