@@ -2,7 +2,9 @@
 
 ## Install
 To install Flora-cli make sure you have python3
-sudo curl -o /usr/local/bin/flora-cli https://raw.githubusercontent.com/NekoKitty/Flora-Cli/master/Flora-Cli/main.py && sudo chmod +x /usr/local/bin/flora-cli
+Execute this command:
+
+``sudo curl -o /usr/local/bin/flora-cli https://raw.githubusercontent.com/NekoKitty/Flora-Cli/master/Flora-Cli/main.py && sudo chmod +x /usr/local/bin/flora-cli``
 
 ##Current features
 - Edit config (Not yet implemented)
