@@ -2,6 +2,7 @@
 
 ## Install
 To install Flora-Cli execute this command in bash
+
 ```bash<(curl -s https://raw.githubusercontent.com/NekoKitty/Flora-Cli/master/install.sh)```
 
 ##Current features
