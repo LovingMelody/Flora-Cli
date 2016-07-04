@@ -13,7 +13,7 @@ import sys
 import zipfile
 from urllib.request import urlretrieve
 from shutil import rmtree
-
+core = psutil.Process()
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update', 'task manager']
@@ -258,7 +258,7 @@ def test_python():
             while x.endswith('\n'):
                 x += str(input('>>> ')).strip().replace('\\n', '\n')
             if not x.startswith('exit'):
-                exec(x)
+                exec(x, globals(), locals())
             else:
                 break
         except Exception as e:
@@ -347,8 +347,9 @@ def task_manager(loop=False):
                 p = psutil.Process(int(p))
                 if os.name != 'nt':
                     os.popen('kill {0}'.format(p.pid))
-                p.kill()
-                p.terminate()
+                else:
+                    p.kill()
+                    p.terminate()
                 psutil.pids()
                 p = int(psutil.pid)
                 if p in psutil.pids():
@@ -359,7 +360,6 @@ def task_manager(loop=False):
                 print('Sorry, I cannot terminate that process')
                 time.sleep(2)
         task_manager(True)
-
 
 
 def main():
