@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# Git Repo https://github.com/NekoKitty/Flora-Cli
 import re
 import os
 import time
@@ -12,12 +13,14 @@ import sys
 import zipfile
 from urllib.request import urlretrieve
 from shutil import rmtree
+print('Use at your own risk, I am not responsible for anything caused by this program!')
+print('If an problem arises please create submit an issue at https://github.com/NekoKitty/Flora-Cli/issues')
 core = psutil.Process()
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
-                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer']
-da_folder = '{0}/Flora_Command-Line/'.format(home)
+                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer']
+da_folder = '{0}/.Flora_Command-Line/'.format(home)
 if os.name == 'nt':
     da_folder = da_folder.replace('/','\\')
 list_of_commands += ['Exit']
@@ -43,8 +46,11 @@ def yes_or_no(question=None):
 
 
 def get_values(fresh=False):
-    path_to_config = '{0}/Flora_Command-Line/'.format(home)
+    path_to_config = '{0}/.Flora_Command-Line/'.format(home)
     if not os.path.exists(path_to_config):
+        print('I am not responsible for anything that goes wrong while using this')
+        if not yes_or_no('Would you like to continue?'):
+            return
         os.mkdir(path_to_config)
         f = open('{0}/values.txt'.format(path_to_config), 'w')
         f.close()
@@ -109,7 +115,7 @@ def edit_config():
 
 def bot_starter():
     process = None
-    path_to_bot = '{0}/Flora_Command-Line/'.format(home)
+    path_to_bot = da_folder
     print(path_to_bot)
     print(os.listdir(path_to_bot))
     try:
@@ -410,6 +416,82 @@ def get_android_adb():
         print('Done')
 
 
+def get_aria2():
+    if sys.platform == 'cygwin':
+        print('Please install using your package manager')
+        return
+    link = 'https://github.com/aria2/aria2/releases/latest'
+    resp = urllib.request.urlopen(urllib.request.Request(link)).read()
+    resp = resp.decode('utf-8')
+    version = re.findall('<span class="css-truncate-target">(.*?)</span>', resp)
+    if len(version) < 1:
+        return
+    version = version[0]
+    version_num = version[8:]
+    if not yes_or_no('Would you like to install aria2 {0}\n'.format(version)):
+        return
+    if sys.platform == 'darwin':
+        dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-osx-darwin.tar.bz2'
+    elif sys.platform == 'linux' or sys.platform == 'linux2':
+        dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}.tar.bz2'
+    elif sys.platform == 'win32':
+        if os.path.exists(da_folder+'aria2'):
+            rmtree(da_folder+'aria2')
+        if os.uname()[-1] == 'x86_64':
+            dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-64bit-build1.zip'
+        else:
+            dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-32bit-build1.zip'
+        dl = dl.format(version, version_num)
+        urlretrieve(dl,da_folder+'aria2.zip', reporthook=reporthook)
+        unzip(da_folder+'aria2.zip', da_folder)
+        for names in os.listdir(da_folder):
+            if names.startswith('arai2'):
+                name = names
+                break
+        os.rename(da_folder+name, da_folder+'aria2')
+        return
+    else:
+        print('Your system isn\'t supported.\nCheck - https://github.com/aria2/aria2/releases/latest to install')
+        return
+    print('Downlading...')
+    dl = dl.format(version, version_num)
+    print(dl)
+    urlretrieve(dl,da_folder+'aria2.tar.bz2')
+    import tarfile
+    if not tarfile.is_tarfile(da_folder+'aria2.tar.bz2'):
+        print('Something went wrong! File isnt a tar')
+        if os.path.exists(da_folder+'aria2.tar.bz2'):
+            pass
+            os.remove(da_folder+'aria2.tar.bz2')
+        return
+    print('Extracting..')
+    file = tarfile.open(da_folder+'aria2.tar.bz2', 'r:bz2')
+    file.extractall(da_folder)
+    file.close()
+    print('Configure...')
+    for file in os.listdir(da_folder):
+        if file.startswith('aria2'):
+            file = file
+            break
+    configureflags = ''
+    makeflags = ''
+    makeinstallflags = ''
+    if yes_or_no('[Advanced]Do you wish to input flags?\n'):
+        print('press enter if no flags for that option (be sure to input (-- or -)')
+        configureflags = input('Configure Flags\n>>> ')
+        makeflags = input('Make Flags\n>>> ')
+        makeinstallflags = 'Make install Flags\n>>> '
+    if_sudo = ''
+    if yes_or_no('Do you need sudo?\n'):
+        if_sudo = 'sudo '
+    len(os.popen('cd {0} && ./configure {1}'.format(da_folder+file, configureflags)).read())
+    print('make....')
+    len(os.popen('cd {0} && make {1}'.format(da_folder + file, makeflags)).read())
+    print('Installing...')
+    len(os.popen('cd {1} && {0}make altinstall {2}'.format(if_sudo, da_folder+file, makeinstallflags)).read())
+    print('Done')
+
+
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -427,7 +509,7 @@ def main():
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
                       'network speed test': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
                       'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager,
-                      'android adb installer': get_android_adb}
+                      'android adb installer': get_android_adb, 'aria2 installer': get_aria2}
 if __name__ == '__main__':
     try:
         # print(sys.argv)
@@ -442,6 +524,7 @@ if __name__ == '__main__':
         get_values(options['First Start'])
         if '--help' in sys.argv:
             move_forward = False
+            print('Currently the flags do nothing but here they are')
             print('Flora Command Line Utility\n--debug || prints out erros\n--config || edit config\n--refresh || resets configuration\n--help || outputs this screen')
         if move_forward:
             print('Hello', val['name'])
