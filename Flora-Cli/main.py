@@ -11,7 +11,7 @@ import zipfile
 from shutil import rmtree
 from subprocess import PIPE
 from urllib.request import urlretrieve
-
+import platform
 import psutil
 
 print('Use at your own risk, I am not responsible for anything caused by this program!')
@@ -429,7 +429,7 @@ class Downloading:
         elif sys.platform == 'win32':
             if os.path.exists(da_folder + 'aria2'):
                 rmtree(da_folder + 'aria2')
-            if os.uname()[-1] == 'x86_64':
+            if platform.uname()[-1] == 'x86_64':
                 dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-64bit-build1.zip'
             else:
                 dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-32bit-build1.zip'
@@ -438,7 +438,7 @@ class Downloading:
             core.unzip(da_folder + 'aria2.zip', da_folder)
             name = None
             for names in os.listdir(da_folder):
-                if names.startswith('arai2'):
+                if names.startswith('aria2'):
                     name = names
                     break
             if name is None:
