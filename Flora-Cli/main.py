@@ -1,39 +1,38 @@
 #!/usr/bin/python3
-<<<<<<< HEAD
 # Git Repo https://github.com/NekoKitty/Flora-Cli
-=======
->>>>>>> master
-import re
 import os
-import time
-import math
-import urllib
-import psutil
-from subprocess import PIPE
-import subprocess
-import traceback
+import re
 import sys
+import time
+import traceback
+import urllib
 import zipfile
-from urllib.request import urlretrieve
 from shutil import rmtree
+from subprocess import PIPE
+from urllib.request import urlretrieve
+
+import psutil
+import json
+
 print('Use at your own risk, I am not responsible for anything caused by this program!')
 print('If an problem arises please create submit an issue at https://github.com/NekoKitty/Flora-Cli/issues')
 core = psutil.Process()
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
-<<<<<<< HEAD
-                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer']
+                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer',
+                    'Edit Hosts']
 da_folder = '{0}/.Flora_Command-Line/'.format(home)
-=======
-                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer']
-da_folder = '{0}/Flora_Command-Line/'.format(home)
->>>>>>> master
 if os.name == 'nt':
     da_folder = da_folder.replace('/','\\')
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
+
+
+def error_handler(error, bypass: bool = False):
+    the_error = '\n'.join(traceback.format_exception(type(error), error, error.__traceback__))
+    print(the_error)
 
 
 def yes_or_no(question=None):
@@ -49,8 +48,8 @@ def yes_or_no(question=None):
                     return True
                 if x.startswith('n'):
                     return False
-        except Exception:
-            pass
+        except Exception as error:
+            error_handler(error)
 
 
 def get_values(fresh=False):
@@ -105,7 +104,9 @@ def command_handler(command):
         if command != 'Exit':
             try:
                 command_dictionary[command]()
-            except:
+            except Exception as error:
+                the_error = '\n'.join(traceback.format_exception(type(error), error, error.__traceback__))
+                print(the_error)
                 print('Command Failed')
             input('press Enter to continue')
             if len(running_pid['list']) > 0:
@@ -149,8 +150,7 @@ def bot_starter():
             try:
                 process = psutil.Popen(bot_command.split(), stdout=PIPE)
             except Exception as error:
-                the_error = '\n'.join(traceback.format_exception(type(error), error, error.__traceback__))
-                print(the_error)
+                error_handler(error)
 
     except:
         try:
@@ -165,8 +165,8 @@ def bot_starter():
             print('Starting Bot')
             process = psutil.Popen(command_need.split(), stdout=PIPE)
             # process = psutil.Popen(['python3.5', '/home/fuzen/Flora/flora.py'], stdout=PIPE)
-        except Exception as e:
-            print(e)
+        except Exception as error:
+            error_handler(error)
     if process:
         print('Bot Started on ID:', process.pid)
         running_pid['list'] += [process]
@@ -183,7 +183,8 @@ def process_killer():
         p.terminate()
         try:
             p.kill()
-        except:
+        except Exception as error:
+            error_handler(error)
             print('failed to kill {0}'.format(p))
 
 
@@ -194,7 +195,7 @@ def speed_test():
     try:
         a, share = speed_test_formatter(a)
     except Exception as e:
-        print(e)
+        error_handler(e)
         print('required dependency not installed')
         if yes_or_no('Would you like for me to install speedtest-cli?'):
             if os.name != 'nt':
@@ -210,7 +211,8 @@ def speed_test():
             else:
                 try:
                     a,share = speed_test_formatter(a)
-                except:
+                except Exception as e:
+                    error_handler(e)
                     share = None
         else:
             a = 'Missing Dependency speedtest-cli'
@@ -261,7 +263,6 @@ def pip_updater():
     print('Done')
 
 
-
 def run_bash_commands():
     while True:
         print('Entering Bash Mode....')
@@ -284,7 +285,7 @@ def test_python():
             else:
                 break
         except Exception as e:
-            print(e)
+            error_handler(e, True)
 
 
 def exiter():
@@ -326,7 +327,7 @@ def program_update():
         rmtree(temp_path)
         print('Done')
     except Exception as e:
-        print(e)
+        error_handler(e)
 
 
 def unzip(source_filename: str, path: str, remove_zip: bool=True):
@@ -345,8 +346,8 @@ def task_manager(loop=False):
         try:
             p = psutil.Process(p)
             display += '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format(p.pid, p.name(), str(p.cpu_percent()) + '%', str(p.memory_percent()) + '%', p.cwd())
-        except:
-            pass
+        except Exception as e:
+            error_handler(e)
     print(display)
     if loop or yes_or_no('Would You like me to terminate a process?\n'):
         print('Enter Done, when you are done')
@@ -364,8 +365,8 @@ def task_manager(loop=False):
                     p = psutil.Process(p)
                     display += '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format(p.pid, p.name(), str(
                         p.cpu_percent()) + '%', str(p.memory_percent()) + '%', p.cwd())
-                except Exception:
-                    pass
+                except Exception as e:
+                    error_handler(e)
             p = 'list'
         if p.lower() != 'list':
             try:
@@ -381,7 +382,8 @@ def task_manager(loop=False):
                     print('Failed')
                 else:
                     print('Exited')
-            except:
+            except Exception as e:
+                error_handler(e)
                 print('Sorry, I cannot terminate that process')
                 time.sleep(2)
         task_manager(True)
@@ -424,7 +426,6 @@ def get_android_adb():
         print('Done')
 
 
-<<<<<<< HEAD
 def get_aria2():
     if sys.platform == 'cygwin':
         print('Please install using your package manager')
@@ -453,10 +454,13 @@ def get_aria2():
         dl = dl.format(version, version_num)
         urlretrieve(dl,da_folder+'aria2.zip', reporthook=reporthook)
         unzip(da_folder+'aria2.zip', da_folder)
+        name = None
         for names in os.listdir(da_folder):
             if names.startswith('arai2'):
                 name = names
                 break
+        if name is None:
+            return
         os.rename(da_folder+name, da_folder+'aria2')
         return
     else:
@@ -477,7 +481,6 @@ def get_aria2():
     file = tarfile.open(da_folder+'aria2.tar.bz2', 'r:bz2')
     file.extractall(da_folder)
     file.close()
-    print('Configure...')
     for file in os.listdir(da_folder):
         if file.startswith('aria2'):
             file = file
@@ -493,6 +496,7 @@ def get_aria2():
     if_sudo = ''
     if yes_or_no('Do you need sudo?\n'):
         if_sudo = 'sudo '
+    print('Configure...')
     len(os.popen('cd {0} && ./configure {1}'.format(da_folder+file, configureflags)).read())
     print('make....')
     len(os.popen('cd {0} && make {1}'.format(da_folder + file, makeflags)).read())
@@ -501,8 +505,76 @@ def get_aria2():
     print('Done')
 
 
-=======
->>>>>>> master
+def host_file_editor():
+    print('This requires the script to be run as root/admin')
+    if not yes_or_no('Would you like to continue?'):
+        print('Returning to menu..')
+        return
+    path_to_hosts = str(input('Path to hosts file: '))
+    if not os.path.exists(da_folder+'hosts'):
+        os.mkdir(da_folder+'hosts')
+    print('Making a host file backup')
+    with open(path_to_hosts, 'r') as backup:
+        b = backup.read()
+        files = os.listdir(da_folder+'hosts')
+        backup_name = 'host.backup'
+        if 'host.backup' in files:
+            x = 1
+            while 'host.backup{0}'.format(x) in files:
+                x += 1
+            backup_name = 'host.backup{0}'.format(x)
+        with open(da_folder+'hosts/'+backup_name, 'w') as x:
+            x.write(b)
+    print('Done:', da_folder+backup_name)
+    if os.path.exists(da_folder+'host_sources.txt'):
+        with open(da_folder+'host_sources.json', 'r') as hosts:
+            host_sources = json.load(hosts)
+    else:
+        with open(da_folder+'host_sources.json', 'w') as hosts:
+            host_sources = {}
+            json.dump(host_sources, hosts)
+    sources = []
+    for key in host_sources.keys():
+        sources += [key]
+    sources += ['Add your own']
+    sources += ['Cancel']
+    msg = 'Host Sources:\n'
+    for option in sources:
+        msg += '\n{0}. {1}'.format(sources.index(option), option)
+    print(msg)
+    try:
+        choice = sources[int(input('Option: '))]
+        if choice == 'Cancel':
+            return
+        if choice == 'Add your own':
+            name = str(input('Name:'))
+            link = str(input('DL link to Host file (ZIP NOT SUPPORTED):'))
+            host_sources[name] = link
+            f = open(da_folder+'host_sources.json', 'w')
+            json.dump(host_sources, f, indent=4)
+        else:
+            link = host_sources[choice]
+        if link:
+            print('Downloading host file...')
+            # may have to use url retrieve
+            urlretrieve(link, da_folder+'dl_host', reporthook=reporthook)
+            with open(da_folder+'dl_host') as new_host:
+                if yes_or_no('Would you like to append to current hosts?\n'):
+                    print('Append hosts...')
+                    f = open(path_to_hosts, 'a')
+                else:
+                    print('Overwriting hosts...')
+                    f = open(path_to_hosts, 'w')
+                f.write('\n# Added By Flora-CLI\n')
+                f.write(new_host.read())
+                f.write('\n#End')
+                f.close()
+            print('Done')
+    except Exception as error:
+        error_handler(error)
+        print('Invallid option')
+
+
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -514,22 +586,26 @@ def main():
             command = list_of_commands.index(x)
         else:
             command = list_of_commands[int(x)]
-    except:
+    except Exception as error:
+        error_handler(error)
         command = None
     command_handler(command)
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
                       'network speed test': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
                       'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager,
-<<<<<<< HEAD
-                      'android adb installer': get_android_adb, 'aria2 installer': get_aria2}
-=======
-                      'android adb installer': get_android_adb}
->>>>>>> master
+                      'android adb installer': get_android_adb, 'aria2 installer': get_aria2,
+                      'Edit Hosts': host_file_editor}
 if __name__ == '__main__':
     try:
         # print(sys.argv)
         error = 'Not Given'
         move_forward = True
+        if '-UP' in sys.argv or '--update-pip' in sys.argv:
+            pip_updater()
+            quit('PIP Update complete')
+        if '-U' in sys.argv or '--update' in sys.argv:
+            program_update()
+            exit('Update complete')
         if '-d' in sys.argv or '--debug' in sys.argv:
             options['debug'] = True
         if '--refresh' in sys.argv:
@@ -539,12 +615,13 @@ if __name__ == '__main__':
         get_values(options['First Start'])
         if '--help' in sys.argv:
             move_forward = False
-            print('Currently the flags do nothing but here they are')
+            print('Currently most of the flags do nothing but here they are')
             print('Flora Command Line Utility\n--debug || prints out erros\n--config || edit config\n--refresh || resets configuration\n--help || outputs this screen')
         if move_forward:
             print('Hello', val['name'])
             main()
         else:
             print('Something went wrong\nError:', error)
-    except:
+    except Exception as error:
+        error_handler(error)
         exiter()
