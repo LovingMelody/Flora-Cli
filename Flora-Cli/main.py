@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # Git Repo https://github.com/NekoKitty/Flora-Cli
+import json
 import os
 import re
 import sys
@@ -12,7 +13,6 @@ from subprocess import PIPE
 from urllib.request import urlretrieve
 
 import psutil
-import json
 
 print('Use at your own risk, I am not responsible for anything caused by this program!')
 print('If an problem arises please create submit an issue at https://github.com/NekoKitty/Flora-Cli/issues')
@@ -605,7 +605,7 @@ if __name__ == '__main__':
             quit('PIP Update complete')
         if '-U' in sys.argv or '--update' in sys.argv:
             program_update()
-            exit('Update complete')
+            quit('Update complete')
         if '-d' in sys.argv or '--debug' in sys.argv:
             options['debug'] = True
         if '--refresh' in sys.argv:
@@ -613,6 +613,12 @@ if __name__ == '__main__':
         if '--config' in sys.argv:
             options['edit config'] = True
         get_values(options['First Start'])
+        if '-ADB' in sys.argv:
+            get_android_adb()
+            quit('Done')
+        if '-Aria2' in sys.argv:
+            get_android_adb()
+            quit('Done')
         if '--help' in sys.argv:
             move_forward = False
             print('Currently most of the flags do nothing but here they are')
