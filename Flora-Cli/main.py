@@ -617,7 +617,7 @@ if __name__ == '__main__':
             get_android_adb()
             quit('Done')
         if '-Aria2' in sys.argv:
-            get_android_adb()
+            get_aria2()
             quit('Done')
         if '--help' in sys.argv:
             move_forward = False
