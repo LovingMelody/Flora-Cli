@@ -1,13 +1,12 @@
 #!/usr/bin/python3
-import sys
+import re
 import os
 import time
 import math
+import urllib
 import psutil
 from subprocess import PIPE
 import subprocess
-import pip
-import getpass
 import traceback
 import sys
 import zipfile
@@ -16,7 +15,11 @@ from shutil import rmtree
 core = psutil.Process()
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
-list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'speedtest', 'start bot', 'kill pid', 'bash', 'update', 'task manager']
+list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
+                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer']
+da_folder = '{0}/Flora_Command-Line/'.format(home)
+if os.name == 'nt':
+    da_folder = da_folder.replace('/','\\')
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
@@ -131,8 +134,9 @@ def bot_starter():
             print('Starting Bot...')
             try:
                 process = psutil.Popen(bot_command.split(), stdout=PIPE)
-            except Exception as e:
-                traceback.format_exception()
+            except Exception as error:
+                the_error = '\n'.join(traceback.format_exception(type(error), error, error.__traceback__))
+                print(the_error)
 
     except:
         try:
@@ -225,19 +229,23 @@ def pip_updater():
     print('Please Note, this has to be run as root or in a venv')
     if not yes_or_no('would you like to continue?'):
         return
+    x = os.popen('pip freeze --local >> {0}its_pip'.format(da_folder))
+    len(x.readlines())
     if os.name != 'nt':
         if not yes_or_no('Do you need sudo?'):
-            pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 pip install -U'
+            pip_update_command = 'pip install -r {0}its_pip -U '.format(da_folder)
         else:
-            pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 sudo pip install -U '
+            pip_update_command = 'sudo pip install -r {0}its_pip -U '.format(da_folder)
     else:
-        pip_update_command = 'pip freeze --local | grep -v \'^\\-e\' | cut -d = -f 1  | xargs -n1 pip install -U '
+        pip_update_command = 'pip install -r {0}its_pip -U '.format(da_folder)
     if yes_or_no('Do you want to install pre releases?'):
         pip_update_command += ' --pre '
     x = os.popen(pip_update_command)
     print('Updating pip please wait...')
     len(x.readlines())
+    os.remove('{0}its_pip'.format(da_folder))
     print('Done')
+
 
 
 def run_bash_commands():
@@ -293,11 +301,14 @@ def program_update():
         while os.path.exists('temp{0}'.format(x[1])):
             x[1] += 1
         temp_path = 'temp{}'.format(x[1])
+        print('Downloading...')
         urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', reporthook)
+        print('Extracting...')
         unzip('master.zip', temp_path)
-        print('installing')
+        print('installing....')
         command = 'cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)
         len(os.popen(command).readlines())
+        print('Removing junk')
         rmtree(temp_path)
         print('Done')
     except Exception as e:
@@ -362,6 +373,43 @@ def task_manager(loop=False):
         task_manager(True)
 
 
+def get_android_adb():
+    if os.path.exists('{0}adb'.format(da_folder)):
+        rmtree('{0}/adb'.format(da_folder))
+    url = 'https://dl.google.com/android/repository/repository-12.xml'
+    #
+    req = urllib.request.Request(url)
+    resp = urllib.request.urlopen(req)
+    respData = resp.read()
+    latest = re.findall('<sdk:url>platform-tools_r(.*?)</sdk:url>', str(respData))
+    osname = sys.platform
+    if osname == 'win32':
+        osname = 'windows'
+    elif osname == 'cygwin':
+        osname = 'windows'
+    elif osname == 'darwin':
+        osname = 'macosx'
+    else:
+        osname = 'linux'
+    if len(latest) > 0:
+        latest = str(latest[0])
+        latest = latest.split('-')
+        if len(latest) > 1:
+            latest = str(latest[0])
+            latest = ('platform-tools_r' + latest + '-' + osname + '.zip')
+            downloadlink = 'https://dl.google.com/android/repository/' + latest
+            print('Downloading...')
+            urlretrieve(downloadlink, da_folder+'latest.zip',reporthook)
+        if not zipfile.is_zipfile('{0}/latest.zip'.format(da_folder)):
+            print('Something went wrong\nFile downloaded is not a zip')
+            return
+        print('Extracting...')
+        unzip('{0}/latest.zip'.format(da_folder), '{0}'.format(da_folder))
+        print('Renaming Folder..')
+        os.rename('{0}/platform-tools'.format(da_folder), '{0}/adb'.format(da_folder))
+        print('Done')
+
+
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -377,8 +425,9 @@ def main():
         command = None
     command_handler(command)
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
-                      'speedtest': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
-                      'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager}
+                      'network speed test': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
+                      'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager,
+                      'android adb installer': get_android_adb}
 if __name__ == '__main__':
     try:
         # print(sys.argv)
