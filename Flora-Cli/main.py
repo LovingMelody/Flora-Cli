@@ -1,5 +1,8 @@
 #!/usr/bin/python3
+<<<<<<< HEAD
 # Git Repo https://github.com/NekoKitty/Flora-Cli
+=======
+>>>>>>> master
 import re
 import os
 import time
@@ -19,8 +22,13 @@ core = psutil.Process()
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
+<<<<<<< HEAD
                     'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer']
 da_folder = '{0}/.Flora_Command-Line/'.format(home)
+=======
+                    'kill pid', 'bash', 'update', 'task manager', 'android adb installer']
+da_folder = '{0}/Flora_Command-Line/'.format(home)
+>>>>>>> master
 if os.name == 'nt':
     da_folder = da_folder.replace('/','\\')
 list_of_commands += ['Exit']
@@ -416,6 +424,7 @@ def get_android_adb():
         print('Done')
 
 
+<<<<<<< HEAD
 def get_aria2():
     if sys.platform == 'cygwin':
         print('Please install using your package manager')
@@ -492,6 +501,8 @@ def get_aria2():
     print('Done')
 
 
+=======
+>>>>>>> master
 def main():
     print('Please Select an option')
     for command in list_of_commands:
@@ -509,7 +520,11 @@ def main():
 command_dictionary = {'Edit Config': edit_config, 'Test Python': test_python, 'Update PIP Dependencies': pip_updater,
                       'network speed test': speed_test, 'start bot': bot_starter, 'kill pid': process_killer,
                       'bash': run_bash_commands, 'update': program_update, 'task manager': task_manager,
+<<<<<<< HEAD
                       'android adb installer': get_android_adb, 'aria2 installer': get_aria2}
+=======
+                      'android adb installer': get_android_adb}
+>>>>>>> master
 if __name__ == '__main__':
     try:
         # print(sys.argv)
