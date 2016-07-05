@@ -235,7 +235,7 @@ def pip_updater():
         if not yes_or_no('Do you need sudo?'):
             pip_update_command = 'pip install -r {0}its_pip -U '.format(da_folder)
         else:
-            pip_update_command = 'sudo pip -r {0}its_pip -U '.format(da_folder)
+            pip_update_command = 'sudo pip install -r {0}its_pip -U '.format(da_folder)
     else:
         pip_update_command = 'pip install -r {0}its_pip -U '.format(da_folder)
     if yes_or_no('Do you want to install pre releases?'):
@@ -301,11 +301,14 @@ def program_update():
         while os.path.exists('temp{0}'.format(x[1])):
             x[1] += 1
         temp_path = 'temp{}'.format(x[1])
+        print('Downloading...')
         urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', reporthook)
+        print('Extracting...')
         unzip('master.zip', temp_path)
-        print('installing')
+        print('installing....')
         command = 'cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)
         len(os.popen(command).readlines())
+        print('Removing junk')
         rmtree(temp_path)
         print('Done')
     except Exception as e:
@@ -395,7 +398,7 @@ def get_android_adb():
             latest = str(latest[0])
             latest = ('platform-tools_r' + latest + '-' + osname + '.zip')
             downloadlink = 'https://dl.google.com/android/repository/' + latest
-            download = urllib.request.urlopen(downloadlink)
+            print('Downloading...')
             urlretrieve(downloadlink, da_folder+'latest.zip',reporthook)
         if not zipfile.is_zipfile('{0}/latest.zip'.format(da_folder)):
             print('Something went wrong\nFile downloaded is not a zip')
