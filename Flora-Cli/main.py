@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Git Repo https://github.com/NekoKitty/Flora-Cli
+# Git Repo https://github.com/Fuzen-py/Flora-Cli
 import json
 import os
 import re
@@ -15,7 +15,7 @@ from urllib.request import urlretrieve
 import psutil
 
 print('Use at your own risk, I am not responsible for anything caused by this program!')
-print('If an problem arises please create submit an issue at https://github.com/NekoKitty/Flora-Cli/issues')
+print('If an problem arises please create submit an issue at https://github.com/Fuzen-py/Flora-Cli/issues')
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
@@ -500,7 +500,7 @@ class Downloading:
                 x[1] += 1
             temp_path = 'temp{}'.format(x[1])
             print('Downloading...')
-            urlretrieve('https://github.com/NekoKitty/Flora-Cli/archive/master.zip', 'master.zip', core.reporthook)
+            urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', 'master.zip', core.reporthook)
             print('Extracting...')
             core.unzip('master.zip', temp_path)
             print('installing....')
