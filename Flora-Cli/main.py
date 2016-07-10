@@ -18,7 +18,7 @@ print('Use at your own risk, I am not responsible for anything caused by this pr
 print('If an problem arises please create submit an issue at https://github.com/Fuzen-py/Flora-Cli/issues')
 home = os.path.expanduser("~")
 options = {'debug': False, 'First Start': False, 'edit config': False}
-list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'start bot',
+list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'custom command',
                     'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer',
                     'Edit Hosts']
 da_folder = '{0}/.Flora_Command-Line/'.format(home)
@@ -518,7 +518,7 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
         self.core = psutil.Process()
         self.command_dictionary = {'Edit Config': self.edit_config, 'Test Python': self.test_python,
                                    'Update PIP Dependencies': self.pip_updater, 'network speed test': self.speed_test,
-                                   'start bot': self.bot_starter, 'kill pid': self.process_killer,
+                                   'custom command': self.scripts_handler, 'kill pid': self.process_killer,
                                    'bash': self.run_bash_commands, 'update': self.program_update,
                                    'task manager': self.task_manager, 'android adb installer': self.get_android_adb,
                                    'aria2 installer': self.get_aria2, 'Edit Hosts': self.host_file_editor}
@@ -544,57 +544,50 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
     def edit_config(self):
         pass  # "Add something here
 
-    def bot_starter(self):
-        process = None
-        path_to_bot = da_folder
-        print(path_to_bot)
-        print(os.listdir(path_to_bot))
-        try:
-            with open('{0}bot.txt'.format(path_to_bot), 'r') as f:
-                x = f.readlines()
-                name, bot_command = x
-                f.close()
-                print('Would you like to start', name, 'with the command:\n', bot_command)
-                if not self.yes_or_no():
-                    if not self.yes_or_no('Would you like to start the bot at all?'):
+    def scripts_handler(self):
+        if not os.path.exists(da_folder+'scripts'):
+            os.mkdir(da_folder+'scripts')
+        print('All custom scripts go in', da_folder+'scripts')
+        while True:
+            msg = 'Please chose an option\nDone to finish\nreload to reload'
+            scripts = os.listdir(da_folder+'scripts')
+            counter = 0
+            for script in scripts:
+                if script.endswith('.bat') or script.endswith('.sh') or script.endswith('.exe'):
+                    if sys.platform != 'win32' and script.endswith('.exe'):
+                        scripts.remove(script)
                         return
-                    while True:
-                        name = input('Bots Name\n>>> ')
-                        bot_command = input('Bot Start Command\n>>> ')
-                        if self.yes_or_no(
-                                'Would you like to start {} with the command:\n{1}'.format(name, bot_command)):
-                            f = open('{0}/bot.txt'.format(path_to_bot), 'w')
-                            text = '{0}\n{1}'.format(name, bot_command)
-                            f.write(text)
-                            f.close()
-                            break
-
-                print('Starting Bot...')
-                try:
-                    process = psutil.Popen(bot_command.split(), stdout=PIPE)
-                except Exception as e:
-                    self.error_handler(e)
-
-        except:
+                    if sys.platform != 'win32' and script.endswith('.bat'):
+                        scripts.remove(script)
+                        return
+                    if sys.platform == 'win32' and script.endswith('.sh'):
+                        scripts.remove(script)
+                        return
+                else:
+                    scripts.remove(script)
+                    return
+                msg += '\n{}. {}'.format(counter, script)
+                counter += 1
+            del counter
             try:
-                print(os.listdir(path_to_bot))
-                f = open('{0}bot.txt'.format(path_to_bot), 'w')
-                name = input('Bots Name: ')
-                print('Please input command needed to start bot from root directory')
-                command_need = input('Command: ')
-                text = '{0}\n{1}'.format(name, command_need)
-                f.write(text)
-                f.close()
-                print('Starting Bot')
-                process = psutil.Popen(command_need.split(), stdout=PIPE)
-                # process = psutil.Popen(['python3.5', '/home/fuzen/Flora/flora.py'], stdout=PIPE)
-            except Exception as e:
-                self.error_handler(e)
-        if process:
-            print('Bot Started on ID:', process.pid)
-            running_pid['list'] += [process]
-        else:
-            print('Could not start bot')
+                print(msg)
+                inc = input('>>> ')
+                if inc.lower() == 'done':
+                    return
+                if inc.lower() != 'reload':
+                    script = scripts[int(inc)]
+                    if script.endswith('.sh'):
+                        c = os.popen('sh {0}'.format(da_folder+'scripts/'+script))
+                    if script.endswith('.bat') or script.endswith('.exe'):
+                        c = os.popen(da_folder+'scripts\\'+script)
+                    c = c.read()
+                    if self.yes_or_no('Would you like to print the output?'):
+                        print(c)
+                    del c
+            except Exception:
+                del script
+                del scripts
+                del msg
 
     def main_menu(self):
         print('Please Select an option')
@@ -652,6 +645,8 @@ if __name__ == '__main__':
                             "--help       || Shows this message")
             print(help_message)
         if move_forward:
+            del move_forward
+            del error
             print('Hello', val['name'])
             core.main_menu()
         else:
