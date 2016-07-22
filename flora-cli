@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Git Repo https://github.com/Fuzen-py/Flora-Cli
 import json
 import os
@@ -21,9 +21,7 @@ options = {'debug': False, 'First Start': False, 'edit config': False}
 list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'network speed test', 'custom command',
                     'kill pid', 'bash', 'update', 'task manager', 'android adb installer', 'aria2 installer',
                     'Edit Hosts']
-da_folder = '{0}/.Flora_Command-Line/'.format(home)
-if os.name == 'nt':
-    da_folder = da_folder.replace('/', '\\')
+da_folder = os.path.join(home, '.Flora_Command-Line')
 list_of_commands += ['Exit']
 running_pid = {'list': []}
 val = {}
@@ -79,13 +77,13 @@ class Utilities:
             print('Exited')
 
     def get_values(self, fresh=False):
-        path_to_config = '{0}/.Flora_Command-Line/'.format(home)
+        path_to_config = da_folder
         if not os.path.exists(path_to_config):
             print('I am not responsible for anything that goes wrong while using this')
             if not self.yes_or_no('Would you like to continue?'):
                 return
             os.mkdir(path_to_config)
-            f = open('{0}/values.txt'.format(path_to_config), 'w')
+            f = open(os.path.join(path_to_config, 'values.txt'), 'w')
             f.close()
             fresh = True
         if fresh:
@@ -108,11 +106,11 @@ class Utilities:
                 pip_list = [False]
             val['pip list'] = pip_list
             text += '{0}\n'.format(val['pip list'])
-            f = open('{0}/values.txt'.format(path_to_config), 'w')
+            f = open(os.path.join(path_to_config, 'values.txt'), 'w')
             f.write(text)
             f.close()
         else:
-            with open('{0}/values.txt'.format(path_to_config), 'r') as f:
+            with open(os.path.join(path_to_config,'values.txt'), 'r') as f:
                 lines = f.readlines()
                 for line in lines:
                     if line.startswith('[') and line.endswith(']'):
@@ -160,14 +158,16 @@ class SystemManagement:
                 while 'host.backup{0}'.format(x) in files:
                     x += 1
                 backup_name = 'host.backup{0}'.format(x)
-            with open(da_folder + 'hosts/' + backup_name, 'w') as x:
+                backup_path = os.path.join(da_folder, 'hosts', backup_name)
+            with open(os.path.join(backup_path, 'w')) as x:
                 x.write(b)
-        print('Done:', da_folder + backup_name)
-        if os.path.exists(da_folder + 'host_sources.txt'):
-            with open(da_folder + 'host_sources.json', 'r') as hosts:
+        print('Done:', backup_path)
+        host_config = os.path.join(da_folder, 'host_sources.json')
+        if os.path.exists(host_config):
+            with open(host_config, 'r') as hosts:
                 host_sources = json.load(hosts)
         else:
-            with open(da_folder + 'host_sources.json', 'w') as hosts:
+            with open(host_config, 'w') as hosts:
                 host_sources = {}
                 json.dump(host_sources, hosts)
         sources = []
@@ -434,8 +434,9 @@ class Downloading:
             else:
                 dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-32bit-build1.zip'
             dl = dl.format(version, version_num)
-            urlretrieve(dl, da_folder + 'aria2.zip', reporthook=core.reporthook)
-            core.unzip(da_folder + 'aria2.zip', da_folder)
+            path_to_zip = os.path.join(da_folder, 'aria2.zip')
+            urlretrieve(dl, path_to_zip, reporthook=core.reporthook)
+            core.unzip(path_to_zip, da_folder)
             name = None
             for names in os.listdir(da_folder):
                 if names.startswith('aria2'):
@@ -443,7 +444,7 @@ class Downloading:
                     break
             if name is None:
                 return
-            os.rename(da_folder + name, da_folder + 'aria2')
+            os.rename(os.path.join(da_folder, name), os.path.join(da_folder, 'aria2'))
             return
         else:
             print('Your system isn\'t supported.\nCheck - https://github.com/aria2/aria2/releases/latest to install')
@@ -451,19 +452,20 @@ class Downloading:
         print('Downlading...')
         dl = dl.format(version, version_num)
         print(dl)
-        urlretrieve(dl, da_folder + 'aria2.tar.bz2')
+        path_to_tar =os.path.join(da_folder, 'aria2.tar.bz2')
+        urlretrieve(dl, path_to_tar)
         import tarfile
-        if not tarfile.is_tarfile(da_folder + 'aria2.tar.bz2'):
+        if not tarfile.is_tarfile(path_to_tar):
             print('Something went wrong! File isnt a tar')
-            if os.path.exists(da_folder + 'aria2.tar.bz2'):
+            if os.path.exists(path_to_tar):
                 pass
                 os.remove(da_folder + 'aria2.tar.bz2')
             return
         print('Extracting..')
-        file = tarfile.open(da_folder + 'aria2.tar.bz2', 'r:bz2')
+        file = tarfile.open(path_to_tar, 'r:bz2')
         file.extractall(da_folder)
         file.close()
-        os.remove(da_folder + 'aria2.tar.bz2')
+        os.remove(path_to_tar)
         for file in os.listdir(da_folder):
             if file.startswith('aria2'):
                 file = file
@@ -480,14 +482,14 @@ class Downloading:
         if core.yes_or_no('Do you need sudo?\n'):
             if_sudo = 'sudo '
         print('Configuring...')
-        len(os.popen('cd {0} && ./configure {1}'.format(da_folder + file, configureflags)).read())
+        len(os.popen('cd {0} && ./configure {1}'.format(os.path.join(da_folder, file), configureflags)).read())
         print('make....')
-        len(os.popen('cd {0} && make {1}'.format(da_folder + file, makeflags)).read())
+        len(os.popen('cd {0} && make {1}'.format(os.path.join(da_folder, file), makeflags)).read())
         print('Installing...')
-        len(os.popen('cd {1} && {0}make install {2}'.format(if_sudo, da_folder + file, makeinstallflags)).read())
+        len(os.popen('cd {1} && {0}make install {2}'.format(if_sudo, os.path.join(da_folder, file), makeinstallflags)).read())
         print('Cleaning up...')
-        len(os.popen('cd {0} && make distclean').read())
-        rmtree(da_folder + file)
+        len(os.popen('cd {0} && make distclean'.format(os.path.join(da_folder, file)).read()))
+        rmtree(os.path.join(da_folder, file))
         print('Done')
 
     def program_update(self):
@@ -504,10 +506,12 @@ class Downloading:
             print('Extracting...')
             core.unzip('master.zip', temp_path)
             print('installing....')
-            command = 'cd {0}/Flora-Cli-master/ && sudo sh setup.sh'.format(temp_path)
+            command = 'cd {0}/Flora-Cli-master/ && sudo python3 setup.py install'.format(temp_path)
             len(os.popen(command).readlines())
             print('Removing junk')
             rmtree(temp_path)
+            if os.path.exists(temp_path):
+                len(os.popen('sudo rm -rf {0}'.format(temp_path)))
             print('Done')
         except Exception as e:
             core.error_handler(e)
