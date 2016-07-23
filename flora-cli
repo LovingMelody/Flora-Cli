@@ -24,8 +24,8 @@ list_of_commands = ['Edit Config', 'Test Python', 'Update PIP Dependencies', 'ne
 da_folder = os.path.join(home, '.Flora_Command-Line')
 list_of_commands += ['Exit']
 running_pid = {'list': []}
-val = {}
-
+join = os.path.join
+exist_check = os.path.exists
 
 class Utilities:
     def exiter(self):
@@ -47,7 +47,7 @@ class Utilities:
 
     def unzip(self, source_filename: str, path: str, remove_zip: bool = True):
         with zipfile.ZipFile(source_filename) as zf:
-            if not os.path.exists(path):
+            if not exist_check(path):
                 os.mkdir(path)
             zf.extractall(path=path)
         if remove_zip:
@@ -77,18 +77,19 @@ class Utilities:
             print('Exited')
 
     def get_values(self, fresh=False):
+        val = {}
         path_to_config = da_folder
-        if not os.path.exists(path_to_config):
+        if not exist_check(path_to_config):
             print('I am not responsible for anything that goes wrong while using this')
             if not self.yes_or_no('Would you like to continue?'):
                 return
             os.mkdir(path_to_config)
-            f = open(os.path.join(path_to_config, 'values.txt'), 'w')
-            f.close()
+            with open(join(path_to_config, 'values.json'), mode='w', encoding='utf-8', errors='backslashreplace') as f:
+                json.dump(obj={}, fp=f, sort_keys=True, indent=4)
             fresh = True
-        if fresh:
+        if fresh or not exist_check(join(path_to_config, 'values.json')):
             val['name'] = str(input('What Should I call you?\nName: ')).strip()
-            text = '{0}\n'.format(val['name'])
+            print('Hello', val['name'])
             prompt = 'Do You Have any libraries that cannot be updated through pip -U {name} [like a git repo]\n'
             if self.yes_or_no(prompt):
                 pip_list = [True]
@@ -105,22 +106,13 @@ class Utilities:
             else:
                 pip_list = [False]
             val['pip list'] = pip_list
-            text += '{0}\n'.format(val['pip list'])
-            f = open(os.path.join(path_to_config, 'values.txt'), 'w')
-            f.write(text)
-            f.close()
+            with open(join(path_to_config, 'values.json'), 'w') as f:
+                json.dump(val, f, sort_keys=True, indent=4)
         else:
-            with open(os.path.join(path_to_config,'values.txt'), 'r') as f:
-                lines = f.readlines()
-                for line in lines:
-                    if line.startswith('[') and line.endswith(']'):
-                        line.strip('[').strip(']')
-                        line.split('\', \'')
-                        for entry in line:
-                            line[line.index(entry)] = entry.strip('\'').strip()
-                        val['pip list'] = line
-                    elif lines.index(line) == 0:
-                        val['name'] = line.strip()
+            with open(os.path.join(path_to_config, 'values.json'), 'r') as f:
+                del val
+                val = json.load(f)
+        return val
 
     def yes_or_no(self, question=None):
         while True:
@@ -146,12 +138,12 @@ class SystemManagement:
             print('Returning to menu..')
             return
         path_to_hosts = str(input('Path to hosts file: '))
-        if not os.path.exists(da_folder + 'hosts'):
-            os.mkdir(da_folder + 'hosts')
+        if not exist_check(join(da_folder, 'hosts')):
+            os.mkdir(join(da_folder, 'hosts'))
         print('Making a host file backup')
         with open(path_to_hosts, 'r') as backup:
             b = backup.read()
-            files = os.listdir(da_folder + 'hosts')
+            files = os.listdir(join(da_folder, 'hosts'))
             backup_name = 'host.backup'
             if 'host.backup' in files:
                 x = 1
@@ -159,11 +151,11 @@ class SystemManagement:
                     x += 1
                 backup_name = 'host.backup{0}'.format(x)
                 backup_path = os.path.join(da_folder, 'hosts', backup_name)
-            with open(os.path.join(backup_path, 'w')) as x:
+            with open(join(backup_path, 'w')) as x:
                 x.write(b)
         print('Done:', backup_path)
         host_config = os.path.join(da_folder, 'host_sources.json')
-        if os.path.exists(host_config):
+        if exist_check(host_config):
             with open(host_config, 'r') as hosts:
                 host_sources = json.load(hosts)
         else:
@@ -187,7 +179,7 @@ class SystemManagement:
                 name = str(input('Name:'))
                 link = str(input('DL link to Host file (ZIP NOT SUPPORTED):'))
                 host_sources[name] = link
-                f = open(da_folder + 'host_sources.json', 'w')
+                f = open(join(da_folder, 'host_sources.json'), 'w')
                 json.dump(host_sources, f, indent=4)
             else:
                 link = host_sources[choice]
@@ -195,7 +187,7 @@ class SystemManagement:
                 print('Downloading host file...')
                 # may have to use url retrieve
                 urlretrieve(link, da_folder + 'dl_host', reporthook=core.reporthook)
-                with open(da_folder + 'dl_host') as new_host:
+                with open(join(da_folder, 'dl_host')) as new_host:
                     if core.yes_or_no('Would you like to append to current hosts?\n'):
                         print('Append hosts...')
                         f = open(path_to_hosts, 'a')
@@ -373,8 +365,8 @@ class Debugging:
 
 class Downloading:
     def get_android_adb(self):
-        if os.path.exists('{0}adb'.format(da_folder)):
-            rmtree('{0}/adb'.format(da_folder))
+        if exist_check(join(da_folder, 'adb')):
+            rmtree(join(da_folder, 'adb'))
         url = 'https://dl.google.com/android/repository/repository-12.xml'
         #
         req = urllib.request.Request(url)
@@ -398,14 +390,14 @@ class Downloading:
                 latest = ('platform-tools_r' + latest + '-' + osname + '.zip')
                 downloadlink = 'https://dl.google.com/android/repository/' + latest
                 print('Downloading...')
-                urlretrieve(downloadlink, da_folder + 'latest.zip', core.reporthook)
-            if not zipfile.is_zipfile('{0}/latest.zip'.format(da_folder)):
+                urlretrieve(downloadlink, join(da_folder, 'latest.zip'), core.reporthook)
+            if not zipfile.is_zipfile(join(da_folder, 'latest.zip')):
                 print('Something went wrong\nFile downloaded is not a zip')
                 return
             print('Extracting...')
-            core.unzip('{0}/latest.zip'.format(da_folder), '{0}'.format(da_folder))
+            core.unzip(join(da_folder, 'latest.zip'), da_folder)
             print('Renaming Folder..')
-            os.rename('{0}/platform-tools'.format(da_folder), '{0}/adb'.format(da_folder))
+            os.rename(join(da_folder, 'platform-tools'), join(da_folder, 'adb'))
             print('Done')
 
     def get_aria2(self):
@@ -427,8 +419,8 @@ class Downloading:
         elif sys.platform == 'linux' or sys.platform == 'linux2':
             dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}.tar.bz2'
         elif sys.platform == 'win32':
-            if os.path.exists(da_folder + 'aria2'):
-                rmtree(da_folder + 'aria2')
+            if exist_check(join(da_folder, 'aria2')):
+                rmtree(join(da_folder, 'aria2'))
             if platform.uname()[-1] == 'x86_64':
                 dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-64bit-build1.zip'
             else:
@@ -457,9 +449,9 @@ class Downloading:
         import tarfile
         if not tarfile.is_tarfile(path_to_tar):
             print('Something went wrong! File isnt a tar')
-            if os.path.exists(path_to_tar):
+            if exist_check(path_to_tar):
                 pass
-                os.remove(da_folder + 'aria2.tar.bz2')
+                os.remove(join(da_folder, 'aria2.tar.bz2'))
             return
         print('Extracting..')
         file = tarfile.open(path_to_tar, 'r:bz2')
@@ -498,7 +490,7 @@ class Downloading:
                 print('Only working on linux systems')
                 return
             x = [os.getcwd(), 0]
-            while os.path.exists('temp{0}'.format(x[1])):
+            while exist_check('temp{0}'.format(x[1])):
                 x[1] += 1
             temp_path = 'temp{}'.format(x[1])
             print('Downloading...')
@@ -510,8 +502,8 @@ class Downloading:
             len(os.popen(command).readlines())
             print('Removing junk')
             rmtree(temp_path)
-            if os.path.exists(temp_path):
-                len(os.popen('sudo rm -rf {0}'.format(temp_path)))
+            if exist_check(temp_path):
+                len(os.popen('sudo rm -rf {0}'.format(temp_path)).read())
             print('Done')
         except Exception as e:
             core.error_handler(e)
@@ -546,15 +538,16 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
             self.main_menu()
 
     def edit_config(self):
-        pass  # "Add something here
+        print('Edit ', join(da_folder, 'values.json'))
+
 
     def scripts_handler(self):
-        if not os.path.exists(da_folder+'scripts'):
-            os.mkdir(da_folder+'scripts')
-        print('All custom scripts go in', da_folder+'scripts')
+        if not exist_check(join(da_folder, 'scripts')):
+            os.mkdir(join(da_folder, 'scripts'))
+        print('All custom scripts go in', join(da_folder, 'scripts'))
         while True:
             msg = 'Please chose an option\nDone to finish\nreload to reload'
-            scripts = os.listdir(da_folder+'scripts')
+            scripts = os.listdir(join(da_folder, 'scripts'))
             counter = 0
             for script in scripts:
                 if script.endswith('.bat') or script.endswith('.sh') or script.endswith('.exe'):
@@ -581,9 +574,9 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
                 if inc.lower() != 'reload':
                     script = scripts[int(inc)]
                     if script.endswith('.sh'):
-                        c = os.popen('sh {0}'.format(da_folder+'scripts/'+script))
+                        c = os.popen('sh {0}'.format(join(da_folder, 'scripts', script)))
                     if script.endswith('.bat') or script.endswith('.exe'):
-                        c = os.popen(da_folder+'scripts\\'+script)
+                        c = os.popen(join(da_folder, 'scripts', script))
                     c = c.read()
                     if self.yes_or_no('Would you like to print the output?'):
                         print(c)
@@ -612,6 +605,7 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
 
 core = Core()
 if __name__ == '__main__':
+    val = core.get_values()
     try:
         # print(sys.argv)
         error = 'Not Given'
