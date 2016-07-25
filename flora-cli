@@ -46,12 +46,15 @@ class Utilities:
             sys.stderr.write("read %d\n" % (readsofar,))
 
     def unzip(self, source_filename: str, path: str, remove_zip: bool = True):
-        with zipfile.ZipFile(source_filename) as zf:
-            if not exist_check(path):
-                os.mkdir(path)
-            zf.extractall(path=path)
-        if remove_zip:
-            os.remove(source_filename)
+        try:
+            with zipfile.ZipFile(source_filename) as zf:
+                if not exist_check(path):
+                    os.mkdir(path)
+                zf.extractall(path=path)
+            if remove_zip:
+                os.remove(source_filename)
+        except Exception as error:
+            core.error_handler(error)
 
     def process_killer(self, p=None):
         if p is None:
@@ -444,8 +447,8 @@ class Downloading:
         print('Downlading...')
         dl = dl.format(version, version_num)
         print(dl)
-        path_to_tar =os.path.join(da_folder, 'aria2.tar.bz2')
-        urlretrieve(dl, path_to_tar)
+        path_to_tar = join(da_folder, 'aria2.tar.bz2')
+        urlretrieve(dl, path_to_tar, reporthook = core.reporthook)
         import tarfile
         if not tarfile.is_tarfile(path_to_tar):
             print('Something went wrong! File isnt a tar')
@@ -474,39 +477,39 @@ class Downloading:
         if core.yes_or_no('Do you need sudo?\n'):
             if_sudo = 'sudo '
         print('Configuring...')
-        len(os.popen('cd {0} && ./configure {1}'.format(os.path.join(da_folder, file), configureflags)).read())
+        len(os.popen('cd {0} && ./configure {1}'.format(join(da_folder, file), configureflags)).read())
         print('make....')
-        len(os.popen('cd {0} && make {1}'.format(os.path.join(da_folder, file), makeflags)).read())
+        len(os.popen('cd {0} && make {1}'.format(join(da_folder, file), makeflags)).read())
         print('Installing...')
-        len(os.popen('cd {1} && {0}make install {2}'.format(if_sudo, os.path.join(da_folder, file), makeinstallflags)).read())
+        len(os.popen('cd {1} && {0}make install {2}'.format(if_sudo, join(da_folder, file), makeinstallflags)).read())
         print('Cleaning up...')
-        len(os.popen('cd {0} && make distclean'.format(os.path.join(da_folder, file)).read()))
-        rmtree(os.path.join(da_folder, file))
+        len(os.popen('cd {0} && make distclean'.format(join(da_folder, file)).read()))
+        rmtree(join(da_folder, file))
         print('Done')
 
     def program_update(self):
         try:
-            if os.name != 'posix':
-                print('Only working on linux systems')
-                return
-            x = [os.getcwd(), 0]
-            while exist_check('temp{0}'.format(x[1])):
-                x[1] += 1
-            temp_path = 'temp{}'.format(x[1])
-            print('Downloading...')
-            urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', 'master.zip', core.reporthook)
+            print('updating..')
+            update_path = join(da_folder, 'Flora-Update')
+            if not exist_check(update_path):
+                os.mkdir(update_path)
+            x = 'Flora-Cli'
+            print('downloading...')
+            urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', join(update_path, 'master.zip'), reporthook=core.reporthook)
             print('Extracting...')
-            core.unzip('master.zip', temp_path)
-            print('installing....')
-            command = 'cd {0}/Flora-Cli-master/ && sudo python3 setup.py install'.format(temp_path)
-            len(os.popen(command).readlines())
-            print('Removing junk')
-            rmtree(temp_path)
-            if exist_check(temp_path):
-                len(os.popen('sudo rm -rf {0}'.format(temp_path)).read())
-            print('Done')
+            core.unzip(join(update_path,'master.zip'), join(update_path))
+            if os.name == 'win32':
+                cmd = 'py {} install'.format(join(update_path,'Flora-Cli-master','setup.py'))
+            else:
+                sudo = ''
+                if core.yes_or_no('do you need sudo for setup.py?\n'):
+                    sudo = 'sudo '
+                cmd = '{}python3 {} install'.format(sudo, join(update_path,'Flora-Cli-master','setup.py'))
+            print('Executing "{}"...'.format(cmd))
+            len(os.popen(cmd).readlines())
+            print('Update Complete')
         except Exception as e:
-            core.error_handler(e)
+            core.error_handler(e, bypass=True)
 
 
 class Core(Downloading, Debugging, Utilities, SystemManagement):
