@@ -1,6 +1,5 @@
 # Flora-Cli
-An Experimental Project for my off time
-Windows support is iffy, use this project at your own risk
+An Experimental Project for my off time. Windows support is iffy, use this project at your own risk
 ## Install
 ``git clone https://github.com/Fuzen-py/Flora-Cli.git``
 
