@@ -509,8 +509,7 @@ class Downloading:
             len(os.popen(cmd).readlines())
             print('Update Complete')
         except Exception as e:
-            core.error_handler(e, bypass=True)
-
+            core.error_handler(e)
 
 class Core(Downloading, Debugging, Utilities, SystemManagement):
     def __init__(self):
