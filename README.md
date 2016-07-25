@@ -1,13 +1,18 @@
 # Flora-Cli
 
 ## Install
-To install Flora-cli make sure you have python3 and the following dependencies are met
-- psutil
+``git clone https://github.com/Fuzen-py/Flora-Cli.git``
 
+``cd Flora-Cli``
 
-Then execute this command:
+``sudo python3 setup.py install``
+Optional:
+``cd ..``
 
-``sudo curl -o /usr/local/bin/flora-cli https://raw.githubusercontent.com/Fuzen-py/Flora-Cli/master/Flora-Cli/main.py && sudo chmod +x /usr/local/bin/flora-cli``
+``sudo rm -rf Flora-Cli``
+
+##Experimental 1 line setup:
+``curl https://gist.githubusercontent.com/Fuzen-py/cd064529361c1755c7645596e525d92e/raw/79d48dd9e2c3701734ac5467397dfcc8a542f6d8/setup.sh | sh``
 
 ##Current features
 - Edit config (Not yet implemented)
