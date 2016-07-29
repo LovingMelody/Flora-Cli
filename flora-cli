@@ -13,6 +13,7 @@ from subprocess import PIPE
 from urllib.request import urlretrieve
 import platform
 import psutil
+import subprocess
 
 print('Use at your own risk, I am not responsible for anything caused by this program!')
 print('If an problem arises please create submit an issue at https://github.com/Fuzen-py/Flora-Cli/issues')
@@ -477,14 +478,17 @@ class Downloading:
         if core.yes_or_no('Do you need sudo?\n'):
             if_sudo = 'sudo '
         print('Configuring...')
-        len(os.popen('cd {0} && ./configure {1}'.format(join(da_folder, file), configureflags)).read())
+        subprocess.Popen('./configure {}'.format(configureflags).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=join(da_folder, file)).communicate()
         print('make....')
-        len(os.popen('cd {0} && make {1}'.format(join(da_folder, file), makeflags)).read())
+        subprocess.Popen('make {}'.format(makeflags).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=join(da_folder, file)).communicate()
         print('Installing...')
-        len(os.popen('cd {1} && {0}make install {2}'.format(if_sudo, join(da_folder, file), makeinstallflags)).read())
+        subprocess.Popen('{}make install {}'.format(if_sudo, makeinstallflags).split(), cwd=join(da_folder, file), stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
         print('Cleaning up...')
-        len(os.popen('cd {0} && make distclean'.format(join(da_folder, file)).read()))
-        rmtree(join(da_folder, file))
+        subprocess.Popen('make distclean'.split(), cwd=join(da_folder, file), stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+        try:
+            rmtree(join(da_folder, file))
+        except:
+            pass
         print('Done')
 
     def program_update(self):
@@ -504,9 +508,10 @@ class Downloading:
                 sudo = ''
                 if core.yes_or_no('do you need sudo for setup.py?\n'):
                     sudo = 'sudo '
-                cmd = '{}python3 {} install'.format(sudo, join(update_path,'Flora-Cli-master','setup.py'))
+                cmd = '{}python3 setup.py install'.format(sudo)
             print('Executing "{}"...'.format(cmd))
             len(os.popen(cmd).readlines())
+            subprocess.Popen(cmd.split(),stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=join(update_path, 'Flora-Cli-master')).communicate()
             print('Update Complete')
         except Exception as e:
             core.error_handler(e)
