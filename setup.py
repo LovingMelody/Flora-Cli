@@ -44,10 +44,28 @@ else:
           author_email='',
           url='https://github.com/Fuzen-py/Flora-Cli',
           license='MIT',
-          packages=find_packages(exclude=['ez_setup', 'examples', 'tests', 'tests.*', 'release']),
+          packages=find_packages(
+              exclude=[
+                  'ez_setup',
+                  'examples',
+                  'tests',
+                  'tests.*',
+                  'release'
+                  ]
+              ),
           include_package_data=True,
           zip_safe=False,
-          install_requires=['psutil', 'speedtest-cli', 'logbook'],
-          extras_require={},
-          scripts=['flora-cli'])
+          install_requires=[
+              'psutil',
+              'speedtest-cli',
+              'logbook'],
+          extras_require={
+              },
+          scripts =['flora-cli'],
+          entry_points={
+              'console_scripts':[
+                  'Flora-cli=flora-cli.core:main'
+                  ]
+              }
+          )
     rename(join(dirname(realpath(__file__)), 'flora-cli'), join(dirname(realpath(__file__)), 'flora-cli.py'))
