@@ -617,72 +617,69 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
         if command is not None:
             log.info('Command "{}" selected'.format(command))
         self.command_handler(command)
-core = Core()
 
-
-def main():
-
-    global core
-    val = core.get_values()
-    try:
-        # print(sys.argv)
-        error = 'Not Given'
-        move_forward = True
-        if '-UP' in sys.argv or '--update-pip' in sys.argv:
-            Core().pip_updater()
-            quit('PIP Update complete')
-        if '-U' in sys.argv or '--update' in sys.argv:
-            Core().program_update()
-            quit('Update complete')
-        if '-d' in sys.argv or '--debug' in sys.argv:
-            options['debug'] = True
-            StreamHandler(sys.stdout).push_application()
-        if '--refresh' in sys.argv:
-            options['First Start'] = True
-        if '--config' in sys.argv:
-            options['edit config'] = True
-        Core().get_values(options['First Start'])
-        if '-ADB' in sys.argv:
-            Core().get_android_adb()
-            quit('Exiting...')
-        elif '-Aria2' in sys.argv:
-            core.get_aria2()
-            quit('Exiting...')
-        elif '--speedtest' in sys.argv:
-            core.speed_test()
-            quit('Exiting...')
-        if '--help' in sys.argv:
-            move_forward = False
-            help_message = ("Flora Command Line Utility\n"
-                            "--debug      || prints out errors when they occur\n"
-                            "--config     || edit config [DISABLED]\n"
-                            "--refresh    || resets configuration (No idea if this works or not to be changed)\n"
-                            "--update     || updates script\n"
-                            "--update-pip || updates pip\n"
-                            "--Aria2      || Installs Aria2\n"
-                            "--speedtest  || Performs a network speedtest\n"
-                            "--help       || Shows this message")
-            print(help_message)
-        if move_forward:
-            del move_forward
-            del error
-            print('Hello', val['name'])
-            log_folder = join(da_folder,'logs')
-            if exist_check(log_folder):
-                if not os.path.isdir(log_folder):
-                    os.remove(log_folder)
+    def main(self):
+        global core
+        val = core.get_values()
+        try:
+            # print(sys.argv)
+            error = 'Not Given'
+            move_forward = True
+            if '-UP' in sys.argv or '--update-pip' in sys.argv:
+                Core().pip_updater()
+                quit('PIP Update complete')
+            if '-U' in sys.argv or '--update' in sys.argv:
+                Core().program_update()
+                quit('Update complete')
+            if '-d' in sys.argv or '--debug' in sys.argv:
+                options['debug'] = True
+                StreamHandler(sys.stdout).push_application()
+            if '--refresh' in sys.argv:
+                options['First Start'] = True
+            if '--config' in sys.argv:
+                options['edit config'] = True
+            Core().get_values(options['First Start'])
+            if '-ADB' in sys.argv:
+                Core().get_android_adb()
+                quit('Exiting...')
+            elif '-Aria2' in sys.argv:
+                core.get_aria2()
+                quit('Exiting...')
+            elif '--speedtest' in sys.argv:
+                core.speed_test()
+                quit('Exiting...')
+            if '--help' in sys.argv:
+                move_forward = False
+                help_message = ("Flora Command Line Utility\n"
+                                "--debug      || prints out errors when they occur\n"
+                                "--config     || edit config [DISABLED]\n"
+                                "--refresh    || resets configuration (No idea if this works or not to be changed)\n"
+                                "--update     || updates script\n"
+                                "--update-pip || updates pip\n"
+                                "--Aria2      || Installs Aria2\n"
+                                "--speedtest  || Performs a network speedtest\n"
+                                "--help       || Shows this message")
+                print(help_message)
+            if move_forward:
+                del move_forward
+                del error
+                print('Hello', val['name'])
+                log_folder = join(da_folder,'logs')
+                if exist_check(log_folder):
+                    if not os.path.isdir(log_folder):
+                        os.remove(log_folder)
+                        os.mkdir(log_folder)
+                else:
                     os.mkdir(log_folder)
-            else:
-                os.mkdir(log_folder)
-            log_path = join(log_folder, 'flora.log')
-            del log_folder
-            log_handler = FileHandler(log_path)
-            log_handler.push_application()
-            core.main_menu()
-        exit(0)
-    except Exception as error:
-        core.error_handler(error)
-        core.exiter()
-
+                log_path = join(log_folder, 'flora.log')
+                del log_folder
+                log_handler = FileHandler(log_path)
+                log_handler.push_application()
+                core.main_menu()
+            exit(0)
+        except Exception as error:
+            core.error_handler(error)
+            core.exiter()
+core = Core()
 if __name__ == '__main__':
-    main()
+    core.main()
