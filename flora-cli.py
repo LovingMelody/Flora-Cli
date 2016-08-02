@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 # Git Repo https://github.com/Fuzen-py/Flora-Cli
 import json
-import os
+import os, sys, platform, psutil
 import re
-import sys
 import time
 import traceback
 import urllib
-import zipfile
+import zipfile, tarfile
 from shutil import rmtree
 from subprocess import PIPE
 from urllib.request import urlretrieve
-import platform
-import psutil
 import subprocess
+from logbook import Logger, FileHandler, StreamHandler
+
+log = Logger('Flora-Cli Log')
+
 
 print('Use at your own risk, I am not responsible for anything caused by this program!')
 print('If an problem arises please create submit an issue at https://github.com/Fuzen-py/Flora-Cli/issues')
@@ -27,6 +28,20 @@ list_of_commands += ['Exit']
 running_pid = {'list': []}
 join = os.path.join
 exist_check = os.path.exists
+log_folder = join(da_folder,'logs')
+sudo_command = 'sudo '
+if os.name == 'nt':
+    sudo_command = 'runas.exe /savecred /user:{} '.format(input('Administrator user name\n>>>'))
+if exist_check(log_folder):
+    if not os.path.isdir(log_folder):
+        os.remove(log_folder)
+        os.mkdir(log_folder)
+else:
+    os.mkdir(log_folder)
+log_path = join(log_folder, 'flora.log')
+del log_folder
+log_handler = FileHandler(log_path)
+log_handler.push_application()
 
 class Utilities:
     def exiter(self):
@@ -155,6 +170,9 @@ class SystemManagement:
                     x += 1
                 backup_name = 'host.backup{0}'.format(x)
                 backup_path = os.path.join(da_folder, 'hosts', backup_name)
+            else:
+                print('Failed to make a backup')
+                raise Exception('Host File backup Failed')
             with open(join(backup_path, 'w')) as x:
                 x.write(b)
         print('Done:', backup_path)
@@ -355,14 +373,13 @@ class Debugging:
                     return
                 x = x.split()
                 print(subprocess.Popen(x, stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read())
-            except:
+            except Exception as error:
                 core.error_handler(error)
 
     def error_handler(self, error, bypass: bool = False):
+        log.error('\n'.join(traceback.format_exception(type(error), error, error.__traceback__)))
         if options['debug'] is not True or not bypass:
             return
-        the_error = '\n'.join(traceback.format_exception(type(error), error, error.__traceback__))
-        print(the_error)
 
 
 class Downloading:
@@ -485,7 +502,8 @@ class Downloading:
         subprocess.Popen('make distclean'.split(), cwd=join(da_folder, file), stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
         try:
             rmtree(join(da_folder, file))
-        except:
+        except Exception as error:
+            core.error_handler(error)
             pass
         print('Done')
 
@@ -552,10 +570,8 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
         while True:
             msg = 'Please chose an option\nDone to finish\nreload to reload'
             scripts = os.listdir(join(da_folder, 'scripts'))
-            print(scripts)
             counter = 0
             for script in scripts:
-                print(script)
                 if script.endswith('.bat') or script.endswith('.sh') or script.endswith('.exe'):
                     if sys.platform != 'win32' and script.endswith('.exe'):
                         scripts.remove(script)
@@ -588,7 +604,6 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
                     print(c.stdout.read().decode('utf-8'))
                     del c
             except Exception as error:
-                print(error)
                 self.error_handler(error, bypass=True)
                 print('Failed')
                 del script
@@ -609,11 +624,15 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
         except Exception as e:
             self.error_handler(e)
             command = None
+        if command is not None:
+            log.info('Command "{}" selected'.format(command))
         self.command_handler(command)
-
-
 core = Core()
-if __name__ == '__main__':
+
+
+def main():
+
+    global core
     val = core.get_values()
     try:
         # print(sys.argv)
@@ -627,6 +646,7 @@ if __name__ == '__main__':
             quit('Update complete')
         if '-d' in sys.argv or '--debug' in sys.argv:
             options['debug'] = True
+            StreamHandler(sys.stdout).push_application()
         if '--refresh' in sys.argv:
             options['First Start'] = True
         if '--config' in sys.argv:
@@ -662,3 +682,6 @@ if __name__ == '__main__':
     except Exception as error:
         core.error_handler(error)
         core.exiter()
+
+if __name__ == '__main__':
+    main()
