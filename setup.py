@@ -61,11 +61,6 @@ else:
               'logbook'],
           extras_require={
               },
-          scripts =['flora-cli'],
-          entry_points={
-              'console_scripts':[
-                  'Flora-cli=flora-cli.core:main'
-                  ]
-              }
+          scripts =['flora-cli']
           )
     rename(join(dirname(realpath(__file__)), 'flora-cli'), join(dirname(realpath(__file__)), 'flora-cli.py'))
