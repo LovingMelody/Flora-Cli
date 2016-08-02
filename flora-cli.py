@@ -28,20 +28,10 @@ list_of_commands += ['Exit']
 running_pid = {'list': []}
 join = os.path.join
 exist_check = os.path.exists
-log_folder = join(da_folder,'logs')
 sudo_command = 'sudo '
 if os.name == 'nt':
     sudo_command = 'runas.exe /savecred /user:{} '.format(input('Administrator user name\n>>>'))
-if exist_check(log_folder):
-    if not os.path.isdir(log_folder):
-        os.remove(log_folder)
-        os.mkdir(log_folder)
-else:
-    os.mkdir(log_folder)
-log_path = join(log_folder, 'flora.log')
-del log_folder
-log_handler = FileHandler(log_path)
-log_handler.push_application()
+
 
 class Utilities:
     def exiter(self):
@@ -677,6 +667,17 @@ def main():
             del move_forward
             del error
             print('Hello', val['name'])
+            log_folder = join(da_folder,'logs')
+            if exist_check(log_folder):
+                if not os.path.isdir(log_folder):
+                    os.remove(log_folder)
+                    os.mkdir(log_folder)
+            else:
+                os.mkdir(log_folder)
+            log_path = join(log_folder, 'flora.log')
+            del log_folder
+            log_handler = FileHandler(log_path)
+            log_handler.push_application()
             core.main_menu()
         exit(0)
     except Exception as error:
