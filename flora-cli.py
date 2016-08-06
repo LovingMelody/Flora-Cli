@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 # Git Repo https://github.com/Fuzen-py/Flora-Cli
 import json
-import os, sys, platform, psutil
+import os
+import sys
+import platform
+try:
+    import psutil
+except:
+    print('Psutil is not installed')
+    quit(-1)
 import re
 import time
 import traceback
 import urllib
-import zipfile, tarfile
+import zipfile
+import tarfile
 from shutil import rmtree
 from subprocess import PIPE
 from urllib.request import urlretrieve
 import subprocess
-from logbook import Logger, FileHandler, StreamHandler
+try:
+    from logbook import Logger, FileHandler, StreamHandler
+except:
+    print('Logbook is not installed')
+    quit(-1)
 
 log = Logger('Flora-Cli Log')
 
@@ -37,7 +49,7 @@ class Utilities:
     def exiter(self):
         print('Exiting...')
         self.process_killer()
-        exit('Exited')
+        exit()
 
     def reporthook(self, blocknum, blocksize, totalsize):
         readsofar = blocknum * blocksize
@@ -327,20 +339,19 @@ class SystemManagement(Utilities):
         print('Please Note, this has to be run as root or in a venv')
         if not self.yes_or_no('would you like to continue?'):
             return
-        subprocess.Popen('pip freeze --local >> its_pip'.split(), cwd=da_folder)
+        p = subprocess.Popen('pip freeze --local'.split(), cwd=da_folder, stdout=subprocess.PIPE).stdout.read().decode('utf-8', errors='backslashreplace').replace('\n', ' ').replace('==', '>=').strip()
         if os.name != 'nt':
             if not self.yes_or_no('Do you need sudo?'):
-                pip_update_command = 'pip install -r its_pip -U '
+                pip_update_command = 'pip install -U {}'.format(p)
             else:
-                pip_update_command = 'sudo pip install -r its_pip -U '
+                pip_update_command = 'sudo -H pip install -U {}'.format(p)
         else:
-            pip_update_command = 'pip install -r its_pip -U '
+            pip_update_command = 'pip install -U {}'.format(p)
         if self.yes_or_no('Do you want to install pre releases?'):
             pip_update_command += ' --pre '
         x = subprocess.Popen(pip_update_command.split(), cwd=da_folder)
         print('Updating pip please wait...')
         x.communicate()
-        os.remove(join(da_folder, 'its_pip'))
         print('Done')
 
 
@@ -523,7 +534,7 @@ class Downloading(Utilities):
         except Exception as e:
             self.error_handler(e)
 
-class Core(Downloading, Debugging, Utilities, SystemManagement):
+class Core(Downloading, Debugging, SystemManagement):
     def __init__(self):
         self.core = psutil.Process()
         self.command_dictionary = {'Edit Config': self.edit_config, 'Test Python': self.test_python,
