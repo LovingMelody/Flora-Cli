@@ -60,7 +60,7 @@ class Utilities:
             if remove_zip:
                 os.remove(source_filename)
         except Exception as error:
-            core.error_handler(error)
+            self.error_handler(error)
 
     def process_killer(self, p=None):
         if p is None:
@@ -69,7 +69,7 @@ class Utilities:
                 try:
                     p.kill()
                 except Exception as error:
-                    core.error_handler(error)
+                    self.error_handler(error)
                     print('failed to kill {0}'.format(p))
             return
         p = psutil.Process(int(p))
@@ -137,13 +137,18 @@ class Utilities:
                     if x.startswith('n'):
                         return False
             except Exception as error:
-                core.error_handler(error)
+                self.error_handler(error)
+
+    def error_handler(self, error, bypass: bool = False):
+        log.error('\n'.join(traceback.format_exception(type(error), error, error.__traceback__)))
+        if options['debug'] is not True or not bypass:
+            return
 
 
-class SystemManagement:
+class SystemManagement(Utilities):
     def host_file_editor(self):
         print('This requires the script to be run as root/admin')
-        if not core.yes_or_no('Would you like to continue?'):
+        if not self.yes_or_no('Would you like to continue?'):
             print('Returning to menu..')
             return
         path_to_hosts = str(input('Path to hosts file: '))
@@ -198,9 +203,9 @@ class SystemManagement:
             if link:
                 print('Downloading host file...')
                 # may have to use url retrieve
-                urlretrieve(link, da_folder + 'dl_host', reporthook=core.reporthook)
+                urlretrieve(link, da_folder + 'dl_host', reporthook=self.reporthook)
                 with open(join(da_folder, 'dl_host')) as new_host:
-                    if core.yes_or_no('Would you like to append to current hosts?\n'):
+                    if self.yes_or_no('Would you like to append to current hosts?\n'):
                         print('Append hosts...')
                         f = open(path_to_hosts, 'a')
                     else:
@@ -212,7 +217,7 @@ class SystemManagement:
                     f.close()
                 print('Done')
         except Exception as e:
-            core.error_handler(e)
+            self.error_handler(e)
             print('Invallid option')
 
     def task_manager(self, loop=False):
@@ -227,9 +232,9 @@ class SystemManagement:
                                                                                       str(p.memory_percent()) + '%',
                                                                                       p.cwd())
             except Exception as e:
-                core.error_handler(e)
+                self.error_handler(e)
         print(display)
-        if loop or core.yes_or_no('Would You like me to terminate a process?\n'):
+        if loop or self.yes_or_no('Would You like me to terminate a process?\n'):
             print('Enter Done, when you are done')
             p = input('PID:\n>>> ')
             print(p)
@@ -246,7 +251,7 @@ class SystemManagement:
                         display += '{0:<10} | {1:>40} | {2:>8} | {3:<22}| {4:>60} |\n'.format(p.pid, p.name(), str(
                             p.cpu_percent()) + '%', str(p.memory_percent()) + '%', p.cwd())
                     except Exception as e:
-                        core.error_handler(e)
+                        self.error_handler(e)
                 p = 'list'
             if p.lower() != 'list':
                 try:
@@ -263,7 +268,7 @@ class SystemManagement:
                     else:
                         print('Exited')
                 except Exception as e:
-                    core.error_handler(e)
+                    self.error_handler(e)
                     print('Sorry, I cannot terminate that process')
                     time.sleep(2)
             self.task_manager(True)
@@ -275,9 +280,9 @@ class SystemManagement:
         try:
             a, share = self.speed_test_formatter(a)
         except Exception as e:
-            core.error_handler(e)
+            self.error_handler(e)
             print('required dependency not installed')
-            if core.yes_or_no('Would you like for me to install speedtest-cli?'):
+            if self.yes_or_no('Would you like for me to install speedtest-cli?'):
                 if os.name != 'nt':
                     subprocess.Popen('sudo pip install speedtest-cli -U'.split()).communicate()
                 else:
@@ -292,7 +297,7 @@ class SystemManagement:
                     try:
                         a, share = self.speed_test_formatter(a)
                     except Exception as e:
-                        core.error_handler(e)
+                        self.error_handler(e)
                         share = None
             else:
                 a = 'Missing Dependency speedtest-cli'
@@ -300,7 +305,7 @@ class SystemManagement:
             if share:
                 print(a)
                 print(share)
-                if core.yes_or_no('Would you like for me to open this in a browser?'):
+                if self.yes_or_no('Would you like for me to open this in a browser?'):
                     if os.name == 'nt':
                         subprocess.Popen('start {0}'.format(share).split())
                     elif os.name == 'posix':
@@ -320,17 +325,17 @@ class SystemManagement:
 
     def pip_updater(self):
         print('Please Note, this has to be run as root or in a venv')
-        if not core.yes_or_no('would you like to continue?'):
+        if not self.yes_or_no('would you like to continue?'):
             return
         subprocess.Popen('pip freeze --local >> its_pip'.split(), cwd=da_folder)
         if os.name != 'nt':
-            if not core.yes_or_no('Do you need sudo?'):
+            if not self.yes_or_no('Do you need sudo?'):
                 pip_update_command = 'pip install -r its_pip -U '
             else:
                 pip_update_command = 'sudo pip install -r its_pip -U '
         else:
             pip_update_command = 'pip install -r its_pip -U '
-        if core.yes_or_no('Do you want to install pre releases?'):
+        if self.yes_or_no('Do you want to install pre releases?'):
             pip_update_command += ' --pre '
         x = subprocess.Popen(pip_update_command.split(), cwd=da_folder)
         print('Updating pip please wait...')
@@ -352,7 +357,7 @@ class Debugging:
                 else:
                     return
             except Exception as e:
-                core.error_handler(e, True)
+                self.error_handler(e, True)
 
     def run_bash_commands(self):
         print('Entering Bash Mode....')
@@ -364,15 +369,12 @@ class Debugging:
                 x = x.split()
                 print(subprocess.Popen(x, stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read())
             except Exception as error:
-                core.error_handler(error)
-
-    def error_handler(self, error, bypass: bool = False):
-        log.error('\n'.join(traceback.format_exception(type(error), error, error.__traceback__)))
-        if options['debug'] is not True or not bypass:
-            return
+                self.error_handler(error)
 
 
-class Downloading:
+
+
+class Downloading(Utilities):
     def get_android_adb(self):
         if exist_check(join(da_folder, 'adb')):
             rmtree(join(da_folder, 'adb'))
@@ -399,12 +401,12 @@ class Downloading:
                 latest = ('platform-tools_r' + latest + '-' + osname + '.zip')
                 downloadlink = 'https://dl.google.com/android/repository/' + latest
                 print('Downloading...')
-                urlretrieve(downloadlink, join(da_folder, 'latest.zip'), core.reporthook)
+                urlretrieve(downloadlink, join(da_folder, 'latest.zip'), self.reporthook)
             if not zipfile.is_zipfile(join(da_folder, 'latest.zip')):
                 print('Something went wrong\nFile downloaded is not a zip')
                 return
             print('Extracting...')
-            core.unzip(join(da_folder, 'latest.zip'), da_folder)
+            self.unzip(join(da_folder, 'latest.zip'), da_folder)
             print('Renaming Folder..')
             os.rename(join(da_folder, 'platform-tools'), join(da_folder, 'adb'))
             print('Done')
@@ -421,7 +423,7 @@ class Downloading:
             return
         version = version[0]
         version_num = version[8:]
-        if not core.yes_or_no('Would you like to install aria2 {0}\n'.format(version)):
+        if not self.yes_or_no('Would you like to install aria2 {0}\n'.format(version)):
             return
         if sys.platform == 'darwin':
             dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-osx-darwin.tar.bz2'
@@ -436,8 +438,8 @@ class Downloading:
                 dl = 'https://github.com/aria2/aria2/releases/download/{0}/aria2-{1}-win-32bit-build1.zip'
             dl = dl.format(version, version_num)
             path_to_zip = os.path.join(da_folder, 'aria2.zip')
-            urlretrieve(dl, path_to_zip, reporthook=core.reporthook)
-            core.unzip(path_to_zip, da_folder)
+            urlretrieve(dl, path_to_zip, reporthook=self.reporthook)
+            self.unzip(path_to_zip, da_folder)
             name = None
             for names in os.listdir(da_folder):
                 if names.startswith('aria2'):
@@ -454,7 +456,7 @@ class Downloading:
         dl = dl.format(version, version_num)
         print(dl)
         path_to_tar = join(da_folder, 'aria2.tar.bz2')
-        urlretrieve(dl, path_to_tar, reporthook = core.reporthook)
+        urlretrieve(dl, path_to_tar, reporthook = self.reporthook)
         import tarfile
         if not tarfile.is_tarfile(path_to_tar):
             print('Something went wrong! File isnt a tar')
@@ -474,13 +476,13 @@ class Downloading:
         configureflags = ''
         makeflags = ''
         makeinstallflags = ''
-        if core.yes_or_no('[Advanced]Do you wish to input flags?\n'):
+        if self.yes_or_no('[Advanced]Do you wish to input flags?\n'):
             print('press enter if no flags for that option (be sure to input (-- or -)')
             configureflags = input('Configure Flags\n>>> ')
             makeflags = input('Make Flags\n>>> ')
             makeinstallflags = 'Make install Flags\n>>> '
         if_sudo = ''
-        if core.yes_or_no('Do you need sudo?\n'):
+        if self.yes_or_no('Do you need sudo?\n'):
             if_sudo = 'sudo '
         print('Configuring...')
         subprocess.Popen('./configure {}'.format(configureflags).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=join(da_folder, file)).communicate()
@@ -493,7 +495,7 @@ class Downloading:
         try:
             rmtree(join(da_folder, file))
         except Exception as error:
-            core.error_handler(error)
+            self.error_handler(error)
             pass
         print('Done')
 
@@ -505,21 +507,21 @@ class Downloading:
                 os.mkdir(update_path)
             x = 'Flora-Cli'
             print('downloading...')
-            urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', join(update_path, 'master.zip'), reporthook=core.reporthook)
+            urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', join(update_path, 'master.zip'), reporthook=self.reporthook)
             print('Extracting...')
-            core.unzip(join(update_path,'master.zip'), join(update_path))
+            self.unzip(join(update_path,'master.zip'), join(update_path))
             if os.name == 'win32':
                 cmd = 'py {} install'.format(join(update_path,'Flora-Cli-master','setup.py'))
             else:
                 sudo = ''
-                if core.yes_or_no('do you need sudo for setup.py?\n'):
+                if self.yes_or_no('do you need sudo for setup.py?\n'):
                     sudo = 'sudo '
                 cmd = '{}python3 setup.py install'.format(sudo)
             print('Executing "{}"...'.format(cmd))
             subprocess.Popen(cmd.split(), cwd=join(update_path, 'Flora-Cli-master')).communicate()
             print('Update Complete')
         except Exception as e:
-            core.error_handler(e)
+            self.error_handler(e)
 
 class Core(Downloading, Debugging, Utilities, SystemManagement):
     def __init__(self):
@@ -619,14 +621,13 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
         self.command_handler(command)
 
     def main(self):
-        global core
-        val = core.get_values()
+        val = self.get_values()
         try:
             # print(sys.argv)
             error = 'Not Given'
             move_forward = True
             if '-UP' in sys.argv or '--update-pip' in sys.argv:
-                Core().pip_updater()
+                self.pip_updater()
                 quit('PIP Update complete')
             if '-U' in sys.argv or '--update' in sys.argv:
                 Core().program_update()
@@ -640,13 +641,13 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
                 options['edit config'] = True
             Core().get_values(options['First Start'])
             if '-ADB' in sys.argv:
-                Core().get_android_adb()
+                self.get_android_adb()
                 quit('Exiting...')
             elif '-Aria2' in sys.argv:
-                core.get_aria2()
+                self.get_aria2()
                 quit('Exiting...')
             elif '--speedtest' in sys.argv:
-                core.speed_test()
+                self.speed_test()
                 quit('Exiting...')
             if '--help' in sys.argv:
                 move_forward = False
@@ -675,11 +676,10 @@ class Core(Downloading, Debugging, Utilities, SystemManagement):
                 del log_folder
                 log_handler = FileHandler(log_path)
                 log_handler.push_application()
-                core.main_menu()
+                self.main_menu()
             exit(0)
         except Exception as error:
-            core.error_handler(error)
-            core.exiter()
-core = Core()
+            self.error_handler(error)
+            self.exiter()
 if __name__ == '__main__':
-    core.main()
+    Core().main()
