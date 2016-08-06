@@ -355,7 +355,7 @@ class SystemManagement(Utilities):
         print('Done')
 
 
-class Debugging:
+class Debugging(Utilities):
     def test_python(self):
         print('enter \n for multi-lined code')
         while True:
