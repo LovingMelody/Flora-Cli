@@ -12,7 +12,7 @@ Optional:
 ``sudo rm -rf Flora-Cli``
 
 ##Experimental 1 line setup:
-``curl https://gist.githubusercontent.com/Fuzen-py/cd064529361c1755c7645596e525d92e/raw/79d48dd9e2c3701734ac5467397dfcc8a542f6d8/setup.sh | sh``
+``pip install -U git+https://github.com/Fuzen-py/Flora-Cli.git``
 
 ##Current features
 - Edit config (Not yet implemented)
