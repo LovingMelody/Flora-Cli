@@ -1,17 +1,6 @@
 # Flora-Cli
 An Experimental Project for my off time. Windows support is iffy, use this project at your own risk
 ## Install
-``git clone https://github.com/Fuzen-py/Flora-Cli.git``
-
-``cd Flora-Cli``
-
-``sudo python3 setup.py install``
-Optional:
-``cd ..``
-
-``sudo rm -rf Flora-Cli``
-
-##Experimental 1 line setup:
 ``pip install -U git+https://github.com/Fuzen-py/Flora-Cli.git``
 
 ##Current features
