@@ -400,8 +400,8 @@ def program_update():
         else:
             sudo = ''
             if yes_or_no('do you need sudo for setup.py?\n'):
-                sudo = 'sudo '
             cmd = '{}python3 -m pip install -U git+https://github.com/Fuzen-py/Flora-Cli.git'.format(sudo)
+                sudo = 'sudo '
         subprocess.Popen(cmd.split(), cwd=join(update_path, 'Flora-Cli-master')).communicate()
         print('Update Complete')
     except Exception as e:
