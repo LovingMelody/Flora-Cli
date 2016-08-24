@@ -395,22 +395,13 @@ def run_bash_commands():
 def program_update():
     try:
         print('updating..')
-        update_path = join(da_folder, 'Flora-Update')
-        if not exist_check(update_path):
-            os.mkdir(update_path)
-        print('downloading...')
-        urlretrieve('https://github.com/Fuzen-py/Flora-Cli/archive/master.zip', join(update_path, 'master.zip'),
-                    reporthook=reporthook)
-        print('Extracting...')
-        unzip(join(update_path, 'master.zip'), join(update_path))
         if os.name == 'win32':
-            cmd = 'py {} install'.format(join(update_path, 'Flora-Cli-master', 'setup.py'))
+            subprocess.Popen('py -m pip install -U git+https://github.com/Fuzen-py/Flora-Cli.git'.split()).communicate()
         else:
             sudo = ''
             if yes_or_no('do you need sudo for setup.py?\n'):
                 sudo = 'sudo '
-            cmd = '{}python3 setup.py install'.format(sudo)
-        print('Executing "{}"...'.format(cmd))
+            cmd = '{}python3 -m pip install -U git+https://github.com/Fuzen-py/Flora-Cli.git'.format(sudo)
         subprocess.Popen(cmd.split(), cwd=join(update_path, 'Flora-Cli-master')).communicate()
         print('Update Complete')
     except Exception as e:
