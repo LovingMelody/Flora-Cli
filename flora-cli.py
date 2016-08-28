@@ -132,7 +132,6 @@ def get_values(fresh=False):
             json.dump(val, f, sort_keys=True, indent=4)
     else:
         with open(os.path.join(path_to_config, 'values.json'), 'r') as f:
-            del val
             val = json.load(f)
     return val
 
@@ -564,7 +563,6 @@ def scripts_handler():
             if script in scripts:
                 msg += '\n{}. {}'.format(counter, script)
                 counter += 1
-        del counter
         try:
             print(msg)
             inc = input('>>> ')
@@ -581,11 +579,9 @@ def scripts_handler():
                 print('\aExecuting...')
 
                 print(c.stdout.read().decode('utf-8'))
-                del c
         except Exception as error:
             error_handler(error, bypass=True)
             print('Failed')
-            del script, scripts, msg
 
 
 class Core(SystemManagement):
@@ -677,8 +673,6 @@ class Core(SystemManagement):
                                 "--help       || Shows this message")
                 print(help_message)
             if move_forward:
-                del move_forward
-                del error
                 print('Hello', val['name'])
                 log_folder = join(da_folder, 'logs')
                 if exist_check(log_folder):
@@ -688,7 +682,6 @@ class Core(SystemManagement):
                 else:
                     os.mkdir(log_folder)
                 log_path = join(log_folder, 'flora.log')
-                del log_folder
                 log_handler = FileHandler(log_path)
                 log_handler.push_application()
                 self.main_menu()
