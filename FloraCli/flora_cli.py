@@ -35,13 +35,12 @@ class Config:
         if exists(self.path):
             try:
                 with open(self.path) as f:
-                    print(json.load(f))
                     config.update(json.load(f))
             except json.decoder.JSONDecodeError:
-                pass
+                remove(self.path)
         else:
             print('I\'m not responsible for damages caused by this software')
-            assert FloraCli.yes_or_no('Would you like to continue?')
+            assert Flora.yes_or_no('Would you like to continue?')
 
         if not isinstance(config.get('debug'), bool):
             config['debug'] = False
@@ -54,10 +53,10 @@ class Config:
             'sudo', config.get('sudo'
                                ) or 'sudo ' if sys.platform != 'win32' else 'runas.exe /savecred /user:{} '.format(
                 input('Administrator user name\n>>>')))
-
+        print(config.get('Name'))
         if not isinstance(config.get('Name'), str):
             print('Hi, What should I call you?')
-            config['name'] = input('>>> ')
+            config['Name'] = input('>>> ')
 
         self.__config = config
         self.get = self.__config.get
@@ -240,22 +239,21 @@ class Flora:
 
     # SYSTEM TOOLS
     def pip_updater(self):
+        cmd = [sys.executable, ' -m', ' pip', ' install', ' -U ']
+        freeze = [sys.executable + ' -m', ' pip', ' freeze', ' --local']
         if os_name != 'win32':
             print('Please Note, this has to be run as root or in a venv')
             if not self.yes_or_no('would you like to continue?'):
                 return
-        p = subprocess.Popen('pip freeze --local'.split(), cwd=self.path, stdout=subprocess.PIPE).stdout.read().decode(
-            'utf-8', errors='backslashreplace').replace('\n', ' ').replace('==', '>=').strip()
+        p = subprocess.Popen(freeze, cwd=self.path, stdout=subprocess.PIPE).stdout.read().decode(
+            'utf-8', errors='backslashreplace').replace('==', '>=').strip()
+        cmd += p.split('\n')
         if os_name != 'nt':
-            if not self.yes_or_no('Do you need sudo?'):
-                pip_update_command = 'pip install -U {}'.format(p)
-            else:
-                pip_update_command = 'sudo -H pip install -U {}'.format(p)
-        else:
-            pip_update_command = 'pip install -U {}'.format(p)
+            if self.yes_or_no('Do you need sudo?'):
+                cmd.insert(0, self.config.get('sudo') or 'sudo')
         if self.yes_or_no('Do you want to install pre releases?'):
-            pip_update_command += ' --pre '
-        x = subprocess.Popen(pip_update_command, cwd=self.path)
+            cmd.append(' --pre ')
+        x = subprocess.Popen(cmd, cwd=self.path)
         print('Updating pip please wait...')
         x.communicate()
         print('Done')
@@ -684,7 +682,7 @@ class Flora:
                 print(help_message)
                 return
             if move_forward:
-                print('Hello', self.config.get('name'))
+                print('Hello', self.config.get('Name'))
                 log_folder = join(self.path, 'logs')
                 if exists(log_folder):
                     if not isdir(log_folder):

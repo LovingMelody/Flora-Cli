@@ -1,4 +1,5 @@
-from .flora_cli import Flora, main
+from .flora_cli import *
+
 __title__ = 'Flora-Cli'
 __version__ = '0.0.1'
 __license__ = 'MIT'
